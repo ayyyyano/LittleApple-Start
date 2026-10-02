@@ -1,0 +1,7 @@
+node_modules
+.next
+.git
+coverage
+npm-debug.log
+task.md
+legacy

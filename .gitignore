@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+build/
+.vercel/
+
+# Test and coverage artifacts
+coverage/
+test-results/
+playwright-report/
+
+# Local environment files (keep the checked-in template)
+.env*
+!.env.example
+
+# Package-manager and runtime logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# TypeScript / tooling caches
+*.tsbuildinfo
+.eslintcache
+.turbo/
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local agent and design notes
+AGENTS.md
+CLAUDE.md
+DESIGN.md
