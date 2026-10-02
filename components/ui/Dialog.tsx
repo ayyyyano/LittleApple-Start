@@ -37,6 +37,7 @@ export function Dialog({
   const descriptionId = useId();
   const contentRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
+  const onOpenChangeRef = useRef(onOpenChange);
   const [mounted, setMounted] = useState(open);
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches);
   const portalTarget = typeof document === "undefined" ? null : document.getElementById("dialog-root") ?? document.body;
@@ -48,6 +49,10 @@ export function Dialog({
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
+
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange;
+  }, [onOpenChange]);
 
   useEffect(() => {
     if (open) {
@@ -72,7 +77,7 @@ export function Dialog({
       if (event.key === "Escape") {
         if (modalDepth === "root" && document.querySelector('[data-modal-depth="nested"][aria-hidden="false"]')) return;
         event.preventDefault();
-        onOpenChange(false);
+        onOpenChangeRef.current(false);
         return;
       }
       if (event.key !== "Tab" || !content) return;
@@ -98,13 +103,15 @@ export function Dialog({
         nestedDialogLockCount = Math.max(0, nestedDialogLockCount - 1);
         if (nestedDialogLockCount === 0) document.body.classList.remove("dialog-nested-open");
       }
-      previousFocus.current?.focus();
+      const target = previousFocus.current;
+      if (target?.isConnected && target.matches(FOCUSABLE)) target.focus();
+      previousFocus.current = null;
     };
-  }, [modalDepth, onOpenChange, open, portalTarget]);
+  }, [modalDepth, open, portalTarget]);
 
   if (!mounted || !portalTarget) return null;
   return createPortal(
-    <div className={cn("dialog-layer", modalDepth === "nested" && "dialog-layer--nested", !open && "dialog-layer--exiting")} data-modal-depth={modalDepth} aria-hidden={!open} role="presentation" onMouseDown={(event) => open && event.target === event.currentTarget && onOpenChange(false)}>
+    <div className={cn("dialog-layer", modalDepth === "nested" && "dialog-layer--nested", !open && "dialog-layer--exiting")} data-modal-depth={modalDepth} aria-hidden={!open} role="presentation" onMouseDown={(event) => open && event.target === event.currentTarget && onOpenChangeRef.current(false)}>
       <Surface
         className={cn("dialog-surface", modalDepth === "nested" && "dialog-surface--nested")}
         variant={surfaceVariant}
@@ -127,7 +134,7 @@ export function Dialog({
               {description && <p id={descriptionId}>{description}</p>}
               </div>
             </div>
-            {showClose && <Button variant="ghost" size="icon" aria-label={closeLabel} onClick={() => onOpenChange(false)}><X size={20} /></Button>}
+            {showClose && <Button variant="ghost" size="icon" aria-label={closeLabel} onClick={() => onOpenChangeRef.current(false)}><X size={20} /></Button>}
           </div>
           {children}
         </div>
