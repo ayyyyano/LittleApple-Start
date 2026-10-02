@@ -20,6 +20,8 @@ export function DataSettings({ onFinished }: { onFinished: () => void }) {
   const { config, replaceConfig, touchAssets, notify, t } = useApp();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<ConfigExportV4 | null>(null);
+  // Keep the last preview snapshot while Dialog owns its exit presence.
+  const [previewContent, setPreviewContent] = useState<ConfigExportV4 | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -36,7 +38,9 @@ export function DataSettings({ onFinished }: { onFinished: () => void }) {
   async function readImport(file: File) {
     try {
       const text = await file.text();
-      setPreview(parseConfigFile(text));
+      const parsed = parseConfigFile(text);
+      setPreviewContent(parsed);
+      setPreview(parsed);
     } catch (error) {
       notify(t(error instanceof Error && error.message === "UNSUPPORTED_CONFIG_VERSION" ? "unsupportedVersion" : "invalidConfig"), "danger");
     } finally {
@@ -87,13 +91,13 @@ export function DataSettings({ onFinished }: { onFinished: () => void }) {
       <SettingGroup title={t("reset")} description={t("resetBody")}>
         <Button variant="danger" onClick={() => setResetOpen(true)}><RotateCcw size={18} />{t("reset")}</Button>
       </SettingGroup>
-      <Dialog open={Boolean(preview)} onOpenChange={(value) => !value && setPreview(null)} title={t("importPreview")} closeLabel={t("close")} modalDepth="nested" description={preview ? t("importSummary", { engines: preview.config.search.engines.length, links: preview.config.quickLinks.length }) : undefined}>
-        {preview && (
+      <Dialog open={Boolean(preview)} onOpenChange={(value) => !value && setPreview(null)} title={t("importPreview")} closeLabel={t("close")} modalDepth="nested" description={previewContent ? t("importSummary", { engines: previewContent.config.search.engines.length, links: previewContent.config.quickLinks.length }) : undefined}>
+        {previewContent && (
           <div className="import-preview-grid">
-            <span>{t("language")}<strong>{preview.config.locale}</strong></span>
-            <span>{t("engines")}<strong>{preview.config.search.engines.length}</strong></span>
-            <span>{t("quickLinks")}<strong>{preview.config.quickLinks.length}</strong></span>
-            <span>{t("background")}<strong>{preview.background?.visual ? "✓" : "—"}</strong></span>
+            <span>{t("language")}<strong>{previewContent.config.locale}</strong></span>
+            <span>{t("engines")}<strong>{previewContent.config.search.engines.length}</strong></span>
+            <span>{t("quickLinks")}<strong>{previewContent.config.quickLinks.length}</strong></span>
+            <span>{t("background")}<strong>{previewContent.background?.visual ? "✓" : "—"}</strong></span>
           </div>
         )}
         <div className="dialog-actions"><Button onClick={() => setPreview(null)}>{t("cancel")}</Button><Button variant="primary" disabled={busy} onClick={applyImport}>{t("applyImport")}</Button></div>

@@ -27,7 +27,8 @@ interface DialogProps {
 const FOCUSABLE = "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])";
 let dialogLockCount = 0;
 let nestedDialogLockCount = 0;
-const DIALOG_EXIT_MS = 180;
+// Keep the JS presence lifetime aligned with the shared --motion-fast exit (120ms).
+export const DIALOG_EXIT_MS = 120;
 
 export function Dialog({
   open, onOpenChange, title, description, children, headerStart, className, fullScreenMobile = false, showClose = true, closeLabel = "Close", surfaceVariant = "auto", modalDepth = "root",

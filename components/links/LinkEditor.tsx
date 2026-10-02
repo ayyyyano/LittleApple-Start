@@ -41,16 +41,14 @@ export function LinkEditor({
   const { t } = useApp();
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title={heading} closeLabel={t("close")} modalDepth={modalDepth}>
-      {open && (
-        <LinkEditorForm
-          key={editing?.id ?? "new"}
-          editing={editing}
-          existing={existing}
-          iconMode={iconMode}
-          onCancel={() => onOpenChange(false)}
-          onSave={(draft) => { onSave(draft); onOpenChange(false); }}
-        />
-      )}
+      <LinkEditorForm
+        key={editing?.id ?? "new"}
+        editing={editing}
+        existing={existing}
+        iconMode={iconMode}
+        onCancel={() => onOpenChange(false)}
+        onSave={(draft) => { onSave(draft); onOpenChange(false); }}
+      />
     </Dialog>
   );
 }

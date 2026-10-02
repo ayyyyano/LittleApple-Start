@@ -14,7 +14,7 @@ import { SearchBox } from "@/components/search/SearchBox";
 import type { SettingsSection } from "@/components/settings/SettingsPanel";
 import { Quote } from "@/components/quote/Quote";
 import { Button } from "@/components/ui/Button";
-import { Dialog } from "@/components/ui/Dialog";
+import { DIALOG_EXIT_MS, Dialog } from "@/components/ui/Dialog";
 import { Surface } from "@/components/ui/Surface";
 import { WeatherWidget } from "@/components/weather/WeatherWidget";
 import { FloatingPlayer } from "@/components/player/FloatingPlayer";
@@ -79,7 +79,7 @@ export function HomeApp() {
     settingsUnmountTimer.current = window.setTimeout(() => {
       setSettingsMounted(false);
       settingsUnmountTimer.current = null;
-    }, 220);
+    }, DIALOG_EXIT_MS);
   }
 
   function restore(always: boolean) {
