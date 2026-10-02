@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -67,8 +67,18 @@ function SortableQuickLink({
     return () => window.clearTimeout(timer);
   }, [actionsOpen, menuMounted]);
 
+  function handleContextMenu(event: MouseEvent<HTMLDivElement>) {
+    if (event.button !== 2) return;
+    const target = event.target;
+    if (target instanceof Element && target.closest(".quick-link-menu, .quick-link-actions, .drag-handle")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onActionsOpenChange(false);
+    onEdit();
+  }
+
   return (
-    <div ref={setNodeRef} style={style} className={`quick-link ${isDragging ? "is-dragging" : ""}`}>
+    <div ref={setNodeRef} style={style} className={`quick-link ${isDragging ? "is-dragging" : ""}`} onContextMenu={handleContextMenu}>
       <span aria-hidden="true" className="quick-link-backdrop" style={visualStyle} />
       <div className="quick-link-content">
         <button className="drag-handle" type="button" aria-label={`${draggingLabel}: ${link.title}`} {...attributes} {...listeners}><Move size={16} /></button>

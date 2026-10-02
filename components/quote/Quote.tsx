@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { useApp } from "@/components/providers/AppProvider";
 import { quoteFallback, quoteProviderKey, readTextPath } from "@/lib/quote";
 import { isSafeHttpUrl } from "@/lib/validation";
@@ -13,13 +13,31 @@ export function Quote() {
   const { config, t } = useApp();
   const provider = config.content.quote;
   if (provider.type === "static") {
-    return <section className="quote-module" aria-label={t("quote")}><p>{provider.text}</p></section>;
+    return <section className="quote-module" aria-label={t("quote")}><QuoteText text={provider.text} /></section>;
   }
   const valid = provider.type === "hitokoto" || (isSafeHttpUrl(provider.endpoint) && Boolean(provider.textPath.trim()));
   if (!valid) {
-    return <section className="quote-module" aria-label={t("quote")}><p>{provider.fallback}</p></section>;
+    return <section className="quote-module" aria-label={t("quote")}><QuoteText text={provider.fallback} /></section>;
   }
   return <RemoteQuote key={quoteProviderKey(provider)} provider={provider} label={t("quote")} />;
+}
+
+function QuoteText({ text }: { text: string }) {
+  const { notify, t } = useApp();
+
+  async function handleContextMenu(event: MouseEvent<HTMLParagraphElement>) {
+    if (event.button !== 2) return;
+    event.preventDefault();
+    try {
+      if (!navigator.clipboard) throw new Error("CLIPBOARD_UNAVAILABLE");
+      await navigator.clipboard.writeText(text);
+      notify(t("quoteCopied"), "success");
+    } catch {
+      notify(t("quoteCopyFailed"), "danger");
+    }
+  }
+
+  return <p onContextMenu={(event) => { void handleContextMenu(event); }}>{text}</p>;
 }
 
 function RemoteQuote({ provider, label }: { provider: Exclude<QuoteProvider, { type: "static" }>; label: string }) {
@@ -56,5 +74,5 @@ function RemoteQuote({ provider, label }: { provider: Exclude<QuoteProvider, { t
     };
   }, [fallback, provider]);
 
-  return <section className="quote-module" aria-label={label} aria-busy={loading}><p>{text}</p></section>;
+  return <section className="quote-module" aria-label={label} aria-busy={loading}><QuoteText text={text} /></section>;
 }

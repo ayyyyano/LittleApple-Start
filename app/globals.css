@@ -334,6 +334,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .quick-link-add-content { opacity: .78; }
 .quick-link--add > .quick-link-content > span { font-size: .82rem; }
 .quick-link--add:hover .quick-link-backdrop { background: var(--state-hover-bg); }
+.clock, .top-actions, .quick-link { user-select: none; -webkit-user-select: none; }
 .empty-state { min-height: 112px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 12px; color: white; text-shadow: 0 2px 14px rgb(0 0 0 / .62); }
 .empty-state p { max-width: 360px; margin: 5px 0 0; color: inherit; font-size: .93rem; }
 .empty-add { width: 44px; height: 44px; display: grid; place-items: center; margin-bottom: 8px; border: 1px solid rgb(255 255 255 / .28); border-radius: 14px; color: white; background: rgb(5 20 38 / .22); box-shadow: 0 8px 24px rgb(0 0 0 / .12); backdrop-filter: blur(10px); cursor: pointer; transition: translate var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
