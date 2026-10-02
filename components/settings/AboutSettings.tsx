@@ -11,8 +11,8 @@ export function AboutSettings() {
   return (
     <div className="about-panel">
       <header className="about-brand">
-        <Image className="about-logo" src={avatarUrl ?? "/favicon.ico"} alt="LittleApple" width={72} height={72} priority={false} unoptimized />
-        <div><h4>{config.siteIdentity.name || DEFAULT_SITE_NAME}</h4><span className="about-edition">{t("communityEdition")}</span><p>{t("version")}</p></div>
+        <Image className="about-logo" src={avatarUrl ?? "/favicon.ico"} alt="LittleApple Start" width={72} height={72} priority={false} unoptimized />
+        <div><h4>{DEFAULT_SITE_NAME}</h4><span className="about-edition">{t("communityEdition")}</span><p>{t("version")}</p></div>
       </header>
       <div className="about-content-grid">
         <section className="about-copy">

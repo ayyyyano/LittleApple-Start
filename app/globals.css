@@ -600,7 +600,8 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
   .clock-date { margin-top: 7px; font-size: .9rem; }
   .quote-module { width: min(92%, 620px); }
   .search-row { min-height: min(var(--search-height), 62px); padding: 5px; border-radius: 17px; }
-  .search-input-wrap .ui-input { min-height: 44px; padding-left: 37px; font-size: .92rem; }
+  .search-input-wrap .ui-input { min-height: 44px; padding-left: 37px; font-size: 16px; }
+  .ui-input, textarea { font-size: 16px; }
   .search-input-wrap > svg { left: 10px; width: 18px; }
   .search-engine-select { flex: 0 0 88px; flex-basis: 88px; width: 88px; min-width: 88px; }
   .search-engine-select .ui-select { min-height: 42px; gap: 6px; padding-left: 6px; padding-right: 20px; font-size: .75rem; }
