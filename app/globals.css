@@ -591,6 +591,8 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 @media (max-width: 767px) {
   :root { --page-gutter: clamp(16px, 4vw, 24px); }
   .app-shell { gap: 10px; padding-top: var(--page-gutter); }
+  /* Keep the wallpaper's cover geometry stable while an Android IME resizes the visual viewport. */
+  .background-root { bottom: auto; height: 100lvh; }
   .top-actions { gap: 5px; top: var(--page-gutter); right: max(var(--page-gutter), env(safe-area-inset-right)); max-width: calc(52vw - var(--page-gutter)); overflow-x: auto; scrollbar-width: none; }
   .top-actions::-webkit-scrollbar { display: none; }
   .top-action { flex: 0 0 40px; width: 40px; min-height: 40px; justify-content: center; padding: 0; border-radius: 12px; box-shadow: inset 0 1px 0 var(--surface-highlight); }
