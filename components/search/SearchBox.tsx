@@ -70,7 +70,7 @@ export function SearchBox() {
   return (
     <section className="search-surface" aria-label={t("search")}>
       <div className="search-row-surface">
-        <Surface className="search-row-visual" variant="auto" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", pointerEvents: "none", ...visualStyle }} />
+        <Surface className="search-row-visual" variant="auto" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", borderRadius: "inherit", pointerEvents: "none", ...visualStyle }} />
         <form className="search-row" onSubmit={(event) => { event.preventDefault(); search(); }}>
         <label className="sr-only" htmlFor="main-search">{t("searchLabel")}</label>
         <div className="search-input-wrap">

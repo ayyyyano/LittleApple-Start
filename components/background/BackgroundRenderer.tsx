@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { useApp } from "@/components/providers/AppProvider";
 import { DEFAULT_BACKGROUND } from "@/lib/default-background";
 import { getBackgroundAsset } from "@/services/background-storage";
@@ -22,14 +22,16 @@ function BackgroundVisual({
   className,
   onLoadedData,
   onError,
+  videoRef,
 }: {
   source: VisualSource;
   className: string;
   onLoadedData?: () => void;
   onError?: () => void;
+  videoRef?: RefObject<HTMLVideoElement | null>;
 }) {
   if (source.type === "video") {
-    return <video className={`background-media background-media--${source.fit} ${className}`} src={source.url} autoPlay loop muted playsInline preload="metadata" onLoadedData={onLoadedData} onError={onError} />;
+    return <video ref={videoRef} className={`background-media background-media--${source.fit} ${className}`} src={source.url} autoPlay loop muted playsInline preload="metadata" onLoadedData={onLoadedData} onError={onError} />;
   }
   return <div className={`background-media background-image background-media--${source.fit} ${className}`} style={{ backgroundImage: `url(${JSON.stringify(source.url)})` }} />;
 }
@@ -48,6 +50,8 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
   const createdUrls = useRef(new Set<string>());
   const transitionTimer = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoWasPlayingBeforeHidden = useRef(false);
+  const backgroundRootRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   useEffect(() => {
     onReadyRef.current = onReady;
@@ -201,12 +205,20 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
 
   useEffect(() => {
     const onVisibility = () => {
-      if (document.hidden) videoRef.current?.pause();
-      else if (config.appearance.backgroundType === "video") videoRef.current?.play().catch(() => undefined);
+      const videos = backgroundRootRef.current?.querySelectorAll<HTMLVideoElement>("video") ?? [];
+      if (document.hidden) {
+        videoWasPlayingBeforeHidden.current = Boolean(videoRef.current && !videoRef.current.paused && !videoRef.current.ended);
+        videos.forEach((video) => video.pause());
+      } else if (config.appearance.backgroundType === "video" && config.appearance.playBackgroundAudio && videoWasPlayingBeforeHidden.current) {
+        videoRef.current?.play().catch(() => undefined);
+        videoWasPlayingBeforeHidden.current = false;
+      } else {
+        videoWasPlayingBeforeHidden.current = false;
+      }
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, [config.appearance.backgroundType]);
+  }, [config.appearance.backgroundType, config.appearance.playBackgroundAudio]);
 
   const customProperties = {
     "--background-blur": `${config.appearance.blur}px`,
@@ -218,10 +230,10 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
   } as CSSProperties;
 
   return (
-    <div className="background-root" style={customProperties} aria-hidden="true">
+    <div ref={backgroundRootRef} className="background-root" style={customProperties} aria-hidden="true">
       {outgoingSource && <BackgroundVisual source={outgoingSource} className={crossfadePhase === "running" ? "background-media--outgoing" : ""} />}
-      {activeSource && <BackgroundVisual source={activeSource} className={crossfadePhase === "entering" ? "background-media--entering" : ""} />}
-      {pendingVideo && <BackgroundVisual source={pendingVideo} className="background-media--pending" onLoadedData={handleVideoReady} onError={handleVideoError} />}
+      {activeSource && <BackgroundVisual source={activeSource} className={crossfadePhase === "entering" ? "background-media--entering" : ""} videoRef={videoRef} />}
+      {pendingVideo && candidate?.type === "video" && pendingVideo.key === candidate.key && <BackgroundVisual source={pendingVideo} className="background-media--pending" onLoadedData={handleVideoReady} onError={handleVideoError} />}
       <div className="background-overlay" />
       {urls.audio && config.appearance.backgroundType !== "video" && <audio ref={audioRef} src={urls.audio} loop preload="none" />}
     </div>

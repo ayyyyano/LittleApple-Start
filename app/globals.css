@@ -245,6 +245,9 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .surface--minimal { background: var(--surface-panel-strong); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 12px 36px rgb(6 28 54 / .14); }
 .surface--liquid { overflow: visible; isolation: isolate; }
 :root[data-surface-mode="liquid"] .surface--liquid { background: var(--liquid-surface-panel, var(--surface-panel)); border-color: var(--liquid-border); box-shadow: var(--liquid-shadow); }
+.surface--liquid-shell > .surface--liquid-fallback,
+.surface--liquid-shell > .surface--liquid-renderer { width: 100%; }
+.surface--liquid-shell > .surface--liquid-renderer { background: transparent; border: 0; box-shadow: none; }
 
 .top-actions { position: fixed; z-index: 35; top: max(var(--page-gutter), env(safe-area-inset-top)); right: max(var(--page-gutter), env(safe-area-inset-right)); display: flex; align-items: center; justify-content: flex-end; gap: 7px; max-width: calc(100vw - 2 * var(--page-gutter)); }
 .top-action { min-height: 40px; max-width: 170px; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; border: 1px solid var(--surface-border); border-radius: 12px; color: var(--text); background: var(--surface-control); box-shadow: var(--surface-shadow); backdrop-filter: blur(12px) saturate(1.2); text-decoration: none; font-size: .78rem; font-weight: 650; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, translate var(--motion-fast) ease; }
@@ -279,6 +282,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .search-surface { position: relative; z-index: 4; width: min(var(--search-width), 100%); margin-inline: auto; }
 .search-row-surface { position: relative; min-height: var(--search-height); border-radius: 20px; }
 .search-row-visual { z-index: 0; border-radius: inherit; }
+:root[data-surface-mode="liquid"] .search-row-visual.surface--liquid-shell > .surface--liquid-renderer > [data-lg-layer] { border-radius: inherit; clip-path: inset(0 round 20px); contain: paint; isolation: isolate; pointer-events: none; }
 .search-row { position: relative; z-index: 1; min-height: var(--search-height); display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: inherit; background: transparent; }
 .search-input-wrap { position: relative; min-width: 0; flex: 1 1 auto; display: flex; align-items: center; }
 .search-input-wrap > svg { position: absolute; left: 12px; z-index: 1; color: var(--text-secondary); pointer-events: none; }
@@ -416,9 +420,10 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 
 .dialog-surface:has(.settings-dialog) { width: min(980px, calc(100vw - 36px)); max-height: min(760px, calc(100dvh - 36px)); }
 :root[data-surface-mode="liquid"] .dialog-surface:has(.settings-dialog) { background: transparent; backdrop-filter: blur(var(--settings-glass-blur)) saturate(1.06); -webkit-backdrop-filter: blur(var(--settings-glass-blur)) saturate(1.06); }
-:root[data-surface-mode="liquid"] .dialog-surface.surface--liquid > .dialog-content { background: transparent; }
-:root[data-surface-mode="liquid"] .dialog-surface.surface--liquid > [data-lg-layer] { border-radius: inherit; clip-path: inset(0 round 22px); contain: paint; isolation: isolate; pointer-events: none; }
+:root[data-surface-mode="liquid"] .dialog-surface.surface--liquid .dialog-content { background: transparent; }
+:root[data-surface-mode="liquid"] .dialog-surface.surface--liquid > .surface--liquid-renderer > [data-lg-layer] { border-radius: inherit; clip-path: inset(0 round 22px); contain: paint; isolation: isolate; pointer-events: none; }
 .settings-dialog { width: 100%; height: min(760px, calc(100dvh - 36px)); padding: 0; overflow: hidden; }
+.dialog-content.settings-dialog { padding: 0; }
 .settings-dialog > .dialog-header { position: relative; min-height: 64px; align-items: center; margin: 0; padding: 12px 16px 12px 10px; border-bottom: 1px solid var(--surface-border-strong); }
 .settings-dialog > .dialog-header .dialog-header-title { position: absolute; inset-inline: 64px; text-align: center; pointer-events: none; }
 .settings-dialog > .dialog-header .dialog-header-title h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -585,8 +590,8 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 
 @media (max-width: 767px) {
   :root { --page-gutter: clamp(16px, 4vw, 24px); }
-  .app-shell { gap: 10px; }
-  .top-actions { gap: 5px; top: max(var(--page-gutter), env(safe-area-inset-top)); right: max(var(--page-gutter), env(safe-area-inset-right)); max-width: calc(52vw - var(--page-gutter)); overflow-x: auto; scrollbar-width: none; }
+  .app-shell { gap: 10px; padding-top: var(--page-gutter); }
+  .top-actions { gap: 5px; top: var(--page-gutter); right: max(var(--page-gutter), env(safe-area-inset-right)); max-width: calc(52vw - var(--page-gutter)); overflow-x: auto; scrollbar-width: none; }
   .top-actions::-webkit-scrollbar { display: none; }
   .top-action { flex: 0 0 40px; width: 40px; min-height: 40px; justify-content: center; padding: 0; border-radius: 12px; box-shadow: inset 0 1px 0 var(--surface-highlight); }
   .top-actions > .ui-tooltip { flex: 0 0 40px; }
@@ -632,13 +637,13 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
   :root[data-surface-mode="liquid"] .dialog-layer--nested .dialog-surface { box-shadow: var(--dialog-shadow-nested-mobile); }
   .dialog-layer--nested .dialog-content { max-height: calc(100dvh - max(12px, env(safe-area-inset-top))); overflow-y: auto; overscroll-behavior: contain; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
   .dialog-layer--nested .dialog-content > .dialog-header { position: sticky; top: -20px; z-index: 2; margin: -20px -20px 18px; padding: 16px 20px 14px; background: var(--surface-panel-strong); border-bottom: 1px solid var(--surface-border); }
-  :root[data-surface-mode="liquid"] .dialog-surface.surface--liquid > [data-lg-layer] { clip-path: inset(0 round 22px 22px 0 0); }
-  :root[data-surface-mode="liquid"] .dialog-surface.surface--liquid:has(.dialog-content--mobile-full) > [data-lg-layer] { clip-path: inset(0); }
+  :root[data-surface-mode="liquid"] .dialog-surface.surface--liquid > .surface--liquid-renderer > [data-lg-layer] { clip-path: inset(0 round 22px 22px 0 0); }
+  :root[data-surface-mode="liquid"] .dialog-surface.surface--liquid:has(.dialog-content--mobile-full) > .surface--liquid-renderer > [data-lg-layer] { clip-path: inset(0); }
   .dialog-content { max-height: min(92dvh, 760px); padding-bottom: max(20px, env(safe-area-inset-bottom)); }
   .dialog-content--mobile-full { width: 100%; height: 100dvh; max-height: none; border-radius: 0; }
   .dialog-surface:has(.dialog-content--mobile-full) { width: 100%; max-height: none; border-radius: 0; }
   .dialog-layer:not(.dialog-layer--nested) .dialog-surface:has(.dialog-content--mobile-full) { height: 100dvh; box-shadow: none; }
-  .settings-dialog > .dialog-header { padding-top: max(12px, env(safe-area-inset-top)); padding-left: 8px; }
+  .settings-dialog > .dialog-header { padding-top: 0; padding-bottom: 0; padding-left: 8px; }
   .settings-dialog > .dialog-header .dialog-header-leading { gap: 22px; }
   .settings-layout { grid-template-columns: 56px minmax(0, 1fr); grid-template-rows: 1fr; height: calc(100% - max(64px, env(safe-area-inset-top))); overflow: hidden; }
   .settings-nav { position: relative; z-index: 4; grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 8px 6px; border-right: 1px solid var(--surface-border-strong); border-bottom: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
@@ -661,7 +666,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
   .dialog-actions--stack-mobile .ui-button { width: 100%; }
   .seasonal-notice { top: max(7px, env(safe-area-inset-top)); align-items: flex-start; }
   .seasonal-notice > div > button:not(.ui-button) { display: none; }
-  .weather-widget { top: max(var(--page-gutter), env(safe-area-inset-top)); max-width: calc(44vw - var(--page-gutter)); padding-inline: 2px; }
+  .weather-widget { top: var(--page-gutter); max-width: calc(44vw - var(--page-gutter)); padding-inline: 2px; }
   .floating-player { bottom: calc(max(var(--page-gutter), env(safe-area-inset-bottom)) + var(--floating-player-bottom-offset, 0px)); }
 }
 

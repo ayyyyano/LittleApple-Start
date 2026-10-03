@@ -44,29 +44,41 @@ export function Surface({ children, className, variant = "auto", as: Tag = "div"
   const fallback = <Tag id={id} role={role} aria-label={ariaLabel} style={fallbackStyle} className={cn("surface", `surface--${mode === "minimal" ? "minimal" : "glass"}`, className)}>{children}</Tag>;
 
   if (mode !== "liquid" || !liquidRenderer) return fallback;
+
+  // Keep the base surface mounted while the optional renderer loads. The
+  // renderer's layout styles are retained, while its duplicate material
+  // styles are owned by the stable shell instead.
+  const rendererStyle: CSSProperties = {
+    ...style,
+    background: "transparent",
+    backgroundColor: "transparent",
+    border: "0",
+    boxShadow: "none",
+  };
+  const liquidFallback = <div className="surface--liquid-fallback">{children}</div>;
+
   return (
-    <LiquidBoundary fallback={fallback}>
-      <Suspense fallback={fallback}>
-        <LiquidGlass
-          id={id}
-          role={role}
-          aria-label={ariaLabel}
-          style={style}
-          className={cn("surface", "surface--liquid", className)}
-          optics={{
-            frost: Math.max(2, config.appearance.glassBlur * 0.48),
-            strength: config.general.motionEnabled ? 0.2 : 0.12,
-            depth: 0.86,
-            curvature: config.general.motionEnabled ? 0.24 : 0.12,
-            dispersion: config.general.motionEnabled ? 0.18 : 0.08,
-            bend: 0.38,
-            sheen: 0.38,
-            glow: 0.14,
-          }}
-        >
-          {children}
-        </LiquidGlass>
-      </Suspense>
-    </LiquidBoundary>
+    <Tag id={id} role={role} aria-label={ariaLabel} style={style} className={cn("surface", "surface--liquid", "surface--liquid-shell", className)}>
+      <LiquidBoundary fallback={liquidFallback}>
+        <Suspense fallback={liquidFallback}>
+          <LiquidGlass
+            style={rendererStyle}
+            className={cn("surface", "surface--liquid", "surface--liquid-renderer")}
+            optics={{
+              frost: Math.max(2, config.appearance.glassBlur * 0.48),
+              strength: config.general.motionEnabled ? 0.2 : 0.12,
+              depth: 0.86,
+              curvature: config.general.motionEnabled ? 0.24 : 0.12,
+              dispersion: config.general.motionEnabled ? 0.18 : 0.08,
+              bend: 0.38,
+              sheen: 0.38,
+              glow: 0.14,
+            }}
+          >
+            {children}
+          </LiquidGlass>
+        </Suspense>
+      </LiquidBoundary>
+    </Tag>
   );
 }
