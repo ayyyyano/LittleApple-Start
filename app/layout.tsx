@@ -5,7 +5,6 @@ export const metadata: Metadata = {
   title: "LittleApple Start",
   description: "一个以个人背景、色彩和视觉构图为核心的本地优先浏览器起始页。",
   applicationName: "LittleApple Start",
-  icons: { icon: "/favicon.ico" },
 };
 
 export const viewport: Viewport = {
@@ -21,6 +20,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body>
         <div id="startup-boot" aria-hidden="true" />
         {children}
