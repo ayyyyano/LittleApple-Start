@@ -45,6 +45,9 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
   const [pendingVideo, setPendingVideo] = useState<VisualSource | null>(null);
   const [crossfadePhase, setCrossfadePhase] = useState<"idle" | "entering" | "running">("idle");
   const activeSourceRef = useRef<VisualSource | null>(null);
+  const outgoingSourceRef = useRef<VisualSource | null>(null);
+  const pendingVideoRef = useRef<VisualSource | null>(null);
+  const audioUrlRef = useRef<string | undefined>(undefined);
   const readyRef = useRef(false);
   const onReadyRef = useRef(onReady);
   const createdUrls = useRef(new Set<string>());
@@ -53,6 +56,24 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
   const videoWasPlayingBeforeHidden = useRef(false);
   const backgroundRootRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const revokeCreatedUrl = useCallback((url?: string) => {
+    if (!url || !createdUrls.current.delete(url)) return;
+    URL.revokeObjectURL(url);
+  }, []);
+
+  const releaseUrlWhenUnused = useCallback((url?: string) => {
+    if (!url || !createdUrls.current.has(url)) return;
+    window.requestAnimationFrame(() => {
+      const stillUsed = [
+        activeSourceRef.current?.url,
+        outgoingSourceRef.current?.url,
+        pendingVideoRef.current?.url,
+        audioUrlRef.current,
+      ].includes(url);
+      if (!stillUsed) revokeCreatedUrl(url);
+    });
+  }, [revokeCreatedUrl]);
   useEffect(() => {
     onReadyRef.current = onReady;
   }, [onReady]);
@@ -77,10 +98,13 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
     }
     const previous = activeSourceRef.current;
     if (!previous) {
+      const previousOutgoing = outgoingSourceRef.current;
       activeSourceRef.current = effectiveSource;
+      outgoingSourceRef.current = null;
       setActiveSource(effectiveSource);
       setOutgoingSource(null);
       setCrossfadePhase("idle");
+      releaseUrlWhenUnused(previousOutgoing?.url);
       markReady();
       return;
     }
@@ -91,24 +115,34 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
     }
     activeSourceRef.current = effectiveSource;
     if (!motionEnabled || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const previousOutgoing = outgoingSourceRef.current;
+      outgoingSourceRef.current = null;
       setOutgoingSource(null);
       setActiveSource(effectiveSource);
       setCrossfadePhase("idle");
+      releaseUrlWhenUnused(previous.url);
+      releaseUrlWhenUnused(previousOutgoing?.url);
       markReady();
       return;
     }
     if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
+    const previousOutgoing = outgoingSourceRef.current;
+    outgoingSourceRef.current = previous;
     setOutgoingSource(previous);
     setActiveSource(effectiveSource);
     setCrossfadePhase("entering");
+    releaseUrlWhenUnused(previousOutgoing?.url);
     window.requestAnimationFrame(() => setCrossfadePhase("running"));
     transitionTimer.current = window.setTimeout(() => {
+      const exiting = outgoingSourceRef.current;
+      outgoingSourceRef.current = null;
       setOutgoingSource(null);
       setCrossfadePhase("idle");
       transitionTimer.current = null;
+      releaseUrlWhenUnused(exiting?.url);
     }, 300);
     markReady();
-  }, [markReady, motionEnabled]);
+  }, [markReady, motionEnabled, releaseUrlWhenUnused]);
 
   useEffect(() => {
     let active = true;
@@ -126,15 +160,21 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
         next.audio = URL.createObjectURL(audio.blob);
         createdUrls.current.add(next.audio);
       }
+      const previousAudio = audioUrlRef.current;
+      audioUrlRef.current = next.audio;
       setUrls(next);
+      releaseUrlWhenUnused(previousAudio);
       setAssetsLoaded(true);
     }).catch(() => {
       if (!active) return;
+      const previousAudio = audioUrlRef.current;
+      audioUrlRef.current = undefined;
       setUrls({});
+      releaseUrlWhenUnused(previousAudio);
       setAssetsLoaded(true);
     });
     return () => { active = false; };
-  }, [assetRevision]);
+  }, [assetRevision, releaseUrlWhenUnused]);
 
   useEffect(() => () => {
     if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
@@ -156,9 +196,17 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
   useEffect(() => {
     if (!candidate) return;
     if (candidate.type === "video") {
-      if (activeSourceRef.current?.key !== candidate.key) setPendingVideo(candidate);
+      if (activeSourceRef.current?.key !== candidate.key) {
+        const previousPending = pendingVideoRef.current;
+        pendingVideoRef.current = candidate;
+        setPendingVideo(candidate);
+        if (previousPending?.url !== candidate.url) releaseUrlWhenUnused(previousPending?.url);
+      }
       return;
     }
+    const previousPending = pendingVideoRef.current;
+    pendingVideoRef.current = null;
+    releaseUrlWhenUnused(previousPending?.url);
     if (activeSourceRef.current?.key === candidate.key) return;
     let cancelled = false;
     const image = new Image();
@@ -171,37 +219,52 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
     image.src = candidate.url;
     image.decode?.().then(() => commit(false)).catch(() => undefined);
     return () => { cancelled = true; image.onload = null; image.onerror = null; };
-  }, [candidate, commitSource]);
+  }, [candidate, commitSource, releaseUrlWhenUnused]);
 
   const handleVideoReady = useCallback(() => {
-    if (!pendingVideo) return;
-    commitSource(pendingVideo);
+    const source = pendingVideoRef.current ?? pendingVideo;
+    if (!source) return;
+    commitSource(source);
+    pendingVideoRef.current = null;
     setPendingVideo(null);
   }, [commitSource, pendingVideo]);
 
   const handleVideoError = useCallback(() => {
+    const failedPending = pendingVideoRef.current ?? pendingVideo;
+    pendingVideoRef.current = null;
     setPendingVideo(null);
+    releaseUrlWhenUnused(failedPending?.url);
     if (!activeSourceRef.current) {
       commitSource({ key: `image|${DEFAULT_BACKGROUND.url}|fill`, type: "image", url: DEFAULT_BACKGROUND.url, fit: "fill" });
     } else {
       markReady();
     }
-  }, [commitSource, markReady]);
+  }, [commitSource, markReady, pendingVideo, releaseUrlWhenUnused]);
 
   useEffect(() => {
-    const media = config.appearance.backgroundType === "video" ? videoRef.current : audioRef.current;
-    if (!media) return;
-    if (!config.appearance.playBackgroundAudio) {
-      media.pause();
-      if (media instanceof HTMLVideoElement) media.muted = true;
-      return;
-    }
-    if (media instanceof HTMLVideoElement) media.muted = false;
-    const play = () => media.play().catch(() => undefined);
+    if (config.appearance.backgroundType !== "video") return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    const play = () => video.play().catch(() => undefined);
     play();
     document.addEventListener("pointerdown", play, { once: true });
     return () => document.removeEventListener("pointerdown", play);
-  }, [activeSource?.key, config.appearance.backgroundType, config.appearance.playBackgroundAudio, urls.audio]);
+  }, [activeSource?.key, config.appearance.backgroundType]);
+
+  useEffect(() => {
+    if (config.appearance.backgroundType === "video") return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (!config.appearance.playBackgroundAudio) {
+      audio.pause();
+      return;
+    }
+    const play = () => audio.play().catch(() => undefined);
+    play();
+    document.addEventListener("pointerdown", play, { once: true });
+    return () => document.removeEventListener("pointerdown", play);
+  }, [config.appearance.backgroundType, config.appearance.playBackgroundAudio, urls.audio]);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -209,7 +272,7 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
       if (document.hidden) {
         videoWasPlayingBeforeHidden.current = Boolean(videoRef.current && !videoRef.current.paused && !videoRef.current.ended);
         videos.forEach((video) => video.pause());
-      } else if (config.appearance.backgroundType === "video" && config.appearance.playBackgroundAudio && videoWasPlayingBeforeHidden.current) {
+      } else if (config.appearance.backgroundType === "video" && videoWasPlayingBeforeHidden.current) {
         videoRef.current?.play().catch(() => undefined);
         videoWasPlayingBeforeHidden.current = false;
       } else {
@@ -218,7 +281,7 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, [config.appearance.backgroundType, config.appearance.playBackgroundAudio]);
+  }, [config.appearance.backgroundType]);
 
   const customProperties = {
     "--background-blur": `${config.appearance.blur}px`,
