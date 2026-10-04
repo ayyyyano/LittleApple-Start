@@ -27,7 +27,7 @@
 * Quick links and actions: supports customizable Quick Links with icon handling, sorting, and a local initial-letter fallback, plus fixed Top Actions.
 * Focus Mode: hides nonessential interface elements for an unobstructed view of the background.
 * Quotes and weather: Hitokoto API is enabled by default with a local fallback; Open-Meteo weather is optional.
-* Audio: supports independently managed background audio stored in the browser and an APlayer playlist with network audio, cover, and LRC lyrics URLs.
+* Audio: supports independently managed background audio stored in the browser and an APlayer playlist with network audio, cover, and LRC lyrics URLs. APlayer also has an optional experimental Meting integration for song, playlist, album, search, and artist resolution.
 * Footer: supports custom copyright text and optional ICP and public-security filing information.
 
 ## Tech Stack
@@ -112,6 +112,7 @@ The following requests occur only after the user enables or configures the corre
 * Open-Meteo weather data.
 * User-configured quote or weather APIs.
 * APlayer audio, cover, and lyrics resources.
+* User-configured Meting API requests for resolved tracks, covers, and lyrics.
 * Third-party Quick Link icons.
 
 ## Version Notes

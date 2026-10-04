@@ -7,6 +7,7 @@ import type {
   ConfigExportV4,
   DateFormat,
   Locale,
+  MetingMatchMode,
   PaletteMode,
   QuickLink,
   QuickLinksDensity,
@@ -238,6 +239,17 @@ export function parseCurrentConfig(value: unknown): AppConfig {
     const aplayer = value.labs.aplayer;
     result.labs.aplayer.enabled = booleanOr(aplayer.enabled, fallback.labs.aplayer.enabled);
     if (aplayer.position === "left" || aplayer.position === "right") result.labs.aplayer.position = aplayer.position;
+    if (aplayer.source === "manual" || aplayer.source === "meting") result.labs.aplayer.source = aplayer.source;
+    if (isRecord(aplayer.meting)) {
+      const meting = aplayer.meting;
+      result.labs.aplayer.meting.enabled = booleanOr(meting.enabled, fallback.labs.aplayer.meting.enabled);
+      result.labs.aplayer.meting.apiBaseUrl = safeUrlOr(meting.apiBaseUrl, fallback.labs.aplayer.meting.apiBaseUrl);
+      result.labs.aplayer.meting.server = stringOr(meting.server, fallback.labs.aplayer.meting.server, 40);
+      if (["song", "playlist", "album", "search", "artist"].includes(String(meting.mode))) {
+        result.labs.aplayer.meting.mode = meting.mode as MetingMatchMode;
+      }
+      result.labs.aplayer.meting.value = stringOr(meting.value, fallback.labs.aplayer.meting.value, 200);
+    }
     result.labs.aplayer.playlist = parseAPlayerPlaylist(aplayer.playlist);
   }
 

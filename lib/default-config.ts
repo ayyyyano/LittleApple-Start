@@ -80,7 +80,13 @@ export const DEFAULT_CONFIG: AppConfig = {
     },
   },
   labs: {
-    aplayer: { enabled: false, position: "left", playlist: [] },
+    aplayer: {
+      enabled: false,
+      position: "left",
+      source: "manual",
+      meting: { enabled: false, apiBaseUrl: "", server: "", mode: "song", value: "" },
+      playlist: [],
+    },
   },
   general: {
     autoDownloadConfig: false,

@@ -9,6 +9,8 @@ export type SurfaceMode = "minimal" | "glass" | "liquid";
 export type QuickLinksDensity = "compact" | "standard" | "comfortable" | "advanced";
 export type WeatherProviderId = "open-meteo";
 export type APlayerPosition = "left" | "right";
+export type MusicSourceMode = "manual" | "meting";
+export type MetingMatchMode = "song" | "playlist" | "album" | "search" | "artist";
 
 export interface SearchEngine {
   id: string;
@@ -51,6 +53,14 @@ export interface APlayerTrack {
   url: string;
   cover?: string;
   lrc?: string;
+}
+
+export interface MetingConfig {
+  enabled: boolean;
+  apiBaseUrl: string;
+  server: string;
+  mode: MetingMatchMode;
+  value: string;
 }
 
 export type QuoteProvider =
@@ -146,6 +156,8 @@ export interface AppConfig {
     aplayer: {
       enabled: boolean;
       position: APlayerPosition;
+      source: MusicSourceMode;
+      meting: MetingConfig;
       playlist: APlayerTrack[];
     };
   };

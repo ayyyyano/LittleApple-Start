@@ -73,6 +73,17 @@ describe("configuration parser", () => {
     expect(old.content.footer).toEqual(config.content.footer);
   });
 
+  it("keeps manual APlayer defaults when Meting fields are absent", () => {
+    const config = cloneDefaultConfig();
+    const parsed = parseCurrentConfig({
+      ...config,
+      labs: { aplayer: { enabled: false, position: "left", playlist: [] } },
+    });
+    expect(parsed.labs.aplayer.source).toBe("manual");
+    expect(parsed.labs.aplayer.meting.enabled).toBe(false);
+    expect(parsed.labs.aplayer.meting.mode).toBe("song");
+  });
+
   it("parses legacy exports", () => {
     const parsed = parseConfigFile(JSON.stringify({
       config: { searchEngines: [{ name: "Bing", url: "https://www.bing.com/search?q=" }], selectedSearchEngine: "https://www.bing.com/search?q=" },
