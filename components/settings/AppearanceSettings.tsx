@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Slider } from "@/components/ui/Slider";
 import { Switch } from "@/components/ui/Switch";
-import { cloneDefaultConfig } from "@/lib/default-config";
 import { DEFAULT_BACKGROUND } from "@/lib/default-background";
 import { extractPaletteFromBlob, normalizeHex } from "@/lib/palette";
 import { isHexColor } from "@/lib/validation";
@@ -18,7 +17,7 @@ import { downloadBlob } from "@/services/configuration-transfer";
 import type { AppConfig, BackgroundFit, SurfaceMode, ThemeMode, ThemeStrength } from "@/types/config";
 
 export function AppearanceSettings() {
-  const { config, updateConfig, touchAssets, notify, t } = useApp();
+  const { config, defaultConfig, updateConfig, touchAssets, notify, t } = useApp();
   const imageInput = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
   const audioInput = useRef<HTMLInputElement>(null);
@@ -119,7 +118,7 @@ export function AppearanceSettings() {
   }
 
   function resetTheme() {
-    const defaults = cloneDefaultConfig();
+    const defaults = defaultConfig;
     updateConfig((current) => ({ ...current, theme: defaults.theme, appearance: {
       ...current.appearance,
       paletteMode: defaults.appearance.paletteMode,
@@ -133,7 +132,7 @@ export function AppearanceSettings() {
   }
 
   function resetLayout() {
-    const defaults = cloneDefaultConfig().appearance;
+    const defaults = defaultConfig.appearance;
     updateAppearance({
       overallScale: defaults.overallScale,
       moduleScale: defaults.moduleScale,
@@ -144,7 +143,7 @@ export function AppearanceSettings() {
   }
 
   function resetBackgroundSettings() {
-    const defaults = cloneDefaultConfig().appearance;
+    const defaults = defaultConfig.appearance;
     updateAppearance({
       backgroundFit: defaults.backgroundFit,
       focalX: defaults.focalX,

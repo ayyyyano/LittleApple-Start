@@ -39,7 +39,7 @@
 
 ## Deployment
 
-> No server database or environment variables are required. Configuration and media files are stored directly in each user's browser.
+> No server database is required. Optional runtime deployment environment variables only seed new users and reset defaults; they never overwrite existing user configuration. Configuration and media files remain in each user's browser.
 
 ### Deploy with Vercel (Recommended)
 
@@ -58,6 +58,23 @@ docker run --rm -p 3000:3000 littleapple-start
 ```
 
 > Open `http://localhost:3000` after the container starts.
+
+### Optional Deployment Defaults
+
+The following public defaults can be set as Docker environment variables or Vercel Project Environment Variables. Unset or empty values keep the built-in defaults. They seed first-run configuration and Reset only; existing user settings and imported `.littleapple` files take precedence.
+
+```yaml
+environment:
+  LITTLEAPPLE_DEFAULT_SITE_NAME: "My Start"
+  LITTLEAPPLE_DEFAULT_BACKGROUND_URL: "https://example.com/background.webp"
+  LITTLEAPPLE_DEFAULT_FAVICON_URL: "https://example.com/favicon.png"
+  LITTLEAPPLE_DEFAULT_ICP_ENABLED: "false"
+  LITTLEAPPLE_DEFAULT_POLICE_ENABLED: "false"
+  LITTLEAPPLE_DEFAULT_COPYRIGHT_ENABLED: "true"
+  LITTLEAPPLE_DEFAULT_COPYRIGHT_TEXT: "© 2026 My Site"
+```
+
+Additional supported parameters are `LITTLEAPPLE_DEFAULT_ICP_TEXT`, `LITTLEAPPLE_DEFAULT_ICP_URL`, `LITTLEAPPLE_DEFAULT_POLICE_TEXT`, and `LITTLEAPPLE_DEFAULT_POLICE_URL`. Boolean values accept `true`/`false` (and `1`/`0`). A user's custom Logo has higher favicon priority than the deployment favicon.
 
 ### Local Development and Debugging
 

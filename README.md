@@ -39,7 +39,7 @@
 
 ## 部署
 
-> 本项目无需配置服务端数据库或环境变量，所有配置及媒体文件均直接存储在用户本地浏览器中。
+> 本项目无需服务端数据库。可选的部署运行时环境变量只用于新用户默认值与重置，不会覆盖已有用户配置；用户配置及媒体文件仍直接存储在浏览器中。
 
 ### 使用 Vercel 部署 (推荐)
 
@@ -58,6 +58,23 @@ docker run --rm -p 3000:3000 littleapple-start
 ```
 
 > 运行后访问 `http://localhost:3000` 即可。
+
+### 部署默认值（可选）
+
+可在 Docker 环境变量或 Vercel Project Environment Variables 中设置以下公开默认值。未设置或为空时保留内置默认；这些值只用于首次初始化和重置，已有配置及导入的 `.littleapple` 配置优先。
+
+```yaml
+environment:
+  LITTLEAPPLE_DEFAULT_SITE_NAME: "My Start"
+  LITTLEAPPLE_DEFAULT_BACKGROUND_URL: "https://example.com/background.webp"
+  LITTLEAPPLE_DEFAULT_FAVICON_URL: "https://example.com/favicon.png"
+  LITTLEAPPLE_DEFAULT_ICP_ENABLED: "false"
+  LITTLEAPPLE_DEFAULT_POLICE_ENABLED: "false"
+  LITTLEAPPLE_DEFAULT_COPYRIGHT_ENABLED: "true"
+  LITTLEAPPLE_DEFAULT_COPYRIGHT_TEXT: "© 2026 My Site"
+```
+
+支持的参数还包括：`LITTLEAPPLE_DEFAULT_ICP_TEXT`、`LITTLEAPPLE_DEFAULT_ICP_URL`、`LITTLEAPPLE_DEFAULT_POLICE_TEXT`、`LITTLEAPPLE_DEFAULT_POLICE_URL`。布尔值支持 `true`/`false`（也兼容 `1`/`0`）。用户自定义 Logo 的 favicon 优先级高于部署 favicon。
 
 ### 本地开发与调试
 

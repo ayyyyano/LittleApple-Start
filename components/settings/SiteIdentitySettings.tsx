@@ -38,7 +38,7 @@ export function useAvatarUrl(assetId: "avatar" | null, assetRevision: number) {
 }
 
 export function SiteIdentitySettings() {
-  const { config, assetRevision, updateConfig, touchAssets, notify, t } = useApp();
+  const { config, defaultConfig, assetRevision, updateConfig, touchAssets, notify, t } = useApp();
   const inputRef = useRef<HTMLInputElement>(null);
   const avatarUrl = useAvatarUrl(config.siteIdentity.avatarAssetId, assetRevision);
 
@@ -68,7 +68,7 @@ export function SiteIdentitySettings() {
 
   async function resetIdentity() {
     await resetLogo();
-    updateConfig((current) => ({ ...current, siteIdentity: { name: DEFAULT_SITE_NAME, avatarAssetId: null } }));
+    updateConfig((current) => ({ ...current, siteIdentity: { name: defaultConfig.siteIdentity.name, avatarAssetId: null } }));
   }
 
   return (

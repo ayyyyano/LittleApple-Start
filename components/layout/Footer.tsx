@@ -8,9 +8,9 @@ export function Footer({ onAbout }: { onAbout: () => void }) {
   const { config, t } = useApp();
   const footer = config.content.footer;
   const legalItems = [
-    { key: "icp", text: footer.icpText, href: footer.icpUrl },
-    { key: "police", text: footer.policeText, href: footer.policeUrl },
-  ].filter((item) => item.text.trim());
+    { key: "icp", text: footer.icpText, href: footer.icpUrl, enabled: footer.showIcp },
+    { key: "police", text: footer.policeText, href: footer.policeUrl, enabled: footer.showPolice },
+  ].filter((item) => item.enabled && item.text.trim());
   return (
     <footer className="site-footer">
       <button type="button" onClick={onAbout}>{t("about")}</button>

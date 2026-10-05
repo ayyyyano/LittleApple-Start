@@ -186,12 +186,12 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
     const requestedVideo = config.appearance.backgroundType === "video" && Boolean(urls.visual);
     const requestedImage = config.appearance.backgroundType === "image" && Boolean(urls.visual);
     const type = requestedVideo ? "video" : "image";
-    const url = requestedVideo || requestedImage ? urls.visual! : DEFAULT_BACKGROUND.url;
+    const url = requestedVideo || requestedImage ? urls.visual! : (config.appearance.backgroundUrl ?? DEFAULT_BACKGROUND.url);
     const fit = requestedVideo && (config.appearance.backgroundFit === "tile" || config.appearance.backgroundFit === "center")
       ? "fit"
       : config.appearance.backgroundFit;
     return { key: `${type}|${url}|${fit}`, type, url, fit };
-  }, [assetsLoaded, config.appearance.backgroundFit, config.appearance.backgroundType, ready, urls.visual]);
+  }, [assetsLoaded, config.appearance.backgroundFit, config.appearance.backgroundType, config.appearance.backgroundUrl, ready, urls.visual]);
 
   useEffect(() => {
     if (!candidate) return;

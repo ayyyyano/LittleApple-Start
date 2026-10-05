@@ -61,6 +61,8 @@ export const DEFAULT_CONFIG: AppConfig = {
     visibility: { clock: true, date: true, quote: true, quickLinks: true, footer: true },
     footer: {
       showLegal: true,
+      showIcp: true,
+      showPolice: true,
       showCopyright: true,
       copyrightText: "© 2016–2026 LittleApple Studio",
       icpText: "闽ICP备2026018137号",

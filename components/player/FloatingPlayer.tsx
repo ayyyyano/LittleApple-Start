@@ -47,7 +47,7 @@ export function FloatingPlayer() {
       window.removeEventListener("resize", measureCollision);
       observer?.disconnect();
     };
-  }, [config.content.footer.showCopyright, config.content.footer.showLegal, config.content.visibility.footer, expanded, footerOffset, player.enabled, player.playlist.length]);
+  }, [config.content.footer.showCopyright, config.content.footer.showIcp, config.content.footer.showLegal, config.content.footer.showPolice, config.content.visibility.footer, expanded, footerOffset, player.enabled, player.playlist.length]);
 
   if (!player.enabled || player.playlist.length === 0) return null;
   return (

@@ -28,9 +28,9 @@ function setFaviconHref(links: HTMLLinkElement[], href: string): void {
   links.forEach((link) => { link.href = href; });
 }
 
-/** Keeps local, user-editable identity reflected in browser metadata without a server round-trip. */
+/** Keeps local identity and the public deployment favicon reflected in browser metadata. */
 export function SiteIdentityMetadata() {
-  const { config, assetRevision } = useApp();
+  const { config, assetRevision, deploymentDefaults } = useApp();
   const faviconUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -54,8 +54,11 @@ export function SiteIdentityMetadata() {
   useEffect(() => {
     let active = true;
     const defaultHref = new URL(DEFAULT_FAVICON, document.baseURI).href;
+    const deploymentHref = deploymentDefaults.faviconUrl
+      ? new URL(deploymentDefaults.faviconUrl, document.baseURI).href
+      : defaultHref;
     const restoreDefault = () => {
-      setFaviconHref(getFaviconLinks(), defaultHref);
+      setFaviconHref(getFaviconLinks(), deploymentHref);
       if (faviconUrlRef.current) {
         URL.revokeObjectURL(faviconUrlRef.current);
         faviconUrlRef.current = null;
@@ -84,7 +87,7 @@ export function SiteIdentityMetadata() {
     });
 
     return () => { active = false; };
-  }, [assetRevision, config.siteIdentity.avatarAssetId]);
+  }, [assetRevision, config.siteIdentity.avatarAssetId, deploymentDefaults.faviconUrl]);
 
   useEffect(() => () => {
     if (faviconUrlRef.current) URL.revokeObjectURL(faviconUrlRef.current);

@@ -1,6 +1,7 @@
 import { cloneDefaultConfig } from "@/lib/default-config";
 import { isLegacyExport, migrateLegacyConfig, migrateV2Config } from "@/lib/config-migrations";
 import { isHexColor, isSafeHttpUrl } from "@/lib/validation";
+import { isSafeDeploymentUrl } from "@/lib/deployment-defaults";
 import type {
   AppConfig,
   APlayerTrack,
@@ -158,6 +159,7 @@ export function parseCurrentConfig(value: unknown): AppConfig {
   if (isRecord(value.appearance)) {
     const appearance = value.appearance;
     if (["none", "image", "video"].includes(String(appearance.backgroundType))) result.appearance.backgroundType = appearance.backgroundType as AppConfig["appearance"]["backgroundType"];
+    if (typeof appearance.backgroundUrl === "string" && isSafeDeploymentUrl(appearance.backgroundUrl)) result.appearance.backgroundUrl = appearance.backgroundUrl.trim().slice(0, 500);
     const fitMap = { cover: "fill", contain: "fit", fill: "fill", fit: "fit", stretch: "stretch", tile: "tile", center: "center" } as const;
     if (typeof appearance.backgroundFit === "string" && appearance.backgroundFit in fitMap) {
       result.appearance.backgroundFit = fitMap[appearance.backgroundFit as keyof typeof fitMap];
@@ -215,6 +217,8 @@ export function parseCurrentConfig(value: unknown): AppConfig {
     if (isRecord(value.content.footer)) {
       const footer = value.content.footer;
       result.content.footer.showLegal = booleanOr(footer.showLegal, fallback.content.footer.showLegal);
+      result.content.footer.showIcp = booleanOr(footer.showIcp, result.content.footer.showLegal);
+      result.content.footer.showPolice = booleanOr(footer.showPolice, result.content.footer.showLegal);
       result.content.footer.showCopyright = booleanOr(footer.showCopyright, fallback.content.footer.showCopyright);
       result.content.footer.copyrightText = stringOr(footer.copyrightText, fallback.content.footer.copyrightText);
       result.content.footer.icpText = stringOr(footer.icpText, fallback.content.footer.icpText);

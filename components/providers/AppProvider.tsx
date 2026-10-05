@@ -2,9 +2,11 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { translate, type MessageKey } from "@/i18n/resources";
+import { applyDeploymentDefaults, type DeploymentDefaults } from "@/lib/deployment-defaults";
 import { cloneDefaultConfig } from "@/lib/default-config";
 import { createLiquidSurfaceTokens, createThemeTokens } from "@/lib/palette";
-import { loadStoredConfig, saveStoredConfig } from "@/services/config-storage";
+import { fetchDeploymentDefaults } from "@/services/deployment-defaults";
+import { hasStoredConfig, loadStoredConfig, saveStoredConfig } from "@/services/config-storage";
 import { createConfigExport, downloadConfig } from "@/services/configuration-transfer";
 import type { AppConfig } from "@/types/config";
 import { ToastViewport, type ToastItem } from "@/components/ui/Toast";
@@ -13,6 +15,9 @@ import { SakuraEffect } from "@/components/effects/SakuraEffect";
 interface AppContextValue {
   config: AppConfig;
   ready: boolean;
+  deploymentDefaults: DeploymentDefaults;
+  defaultConfig: AppConfig;
+  refreshDeploymentDefaults: () => Promise<DeploymentDefaults>;
   assetRevision: number;
   updateConfig: (updater: (current: AppConfig) => AppConfig) => void;
   replaceConfig: (config: AppConfig) => void;
@@ -26,6 +31,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<AppConfig>(() => cloneDefaultConfig());
   const [ready, setReady] = useState(false);
+  const [deploymentDefaults, setDeploymentDefaults] = useState<DeploymentDefaults>({});
   const [assetRevision, setAssetRevision] = useState(0);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const statusAfterLoad = useRef<"migrated" | "recovered" | null>(null);
@@ -36,16 +42,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setToasts((items) => [...items, { id, message, tone }]);
   }, []);
 
+  const refreshDeploymentDefaults = useCallback(async () => {
+    const next = await fetchDeploymentDefaults();
+    setDeploymentDefaults(next);
+    return next;
+  }, []);
+
   useEffect(() => {
     let active = true;
-    loadStoredConfig().then(({ config: stored, migratedLegacy, recovered }) => {
+    const load = async () => {
+      const existing = hasStoredConfig();
+      const defaultsPromise = refreshDeploymentDefaults();
+      const defaults = existing ? {} : await defaultsPromise;
+      const loaded = await loadStoredConfig(defaults);
       if (!active) return;
-      setConfig(stored);
-      statusAfterLoad.current = migratedLegacy ? "migrated" : recovered ? "recovered" : null;
+      setConfig(loaded.config);
+      statusAfterLoad.current = loaded.migratedLegacy ? "migrated" : loaded.recovered ? "recovered" : null;
       setReady(true);
-    });
+    };
+    void load();
     return () => { active = false; };
-  }, []);
+  }, [refreshDeploymentDefaults]);
 
   useEffect(() => {
     if (!ready || !statusAfterLoad.current) return;
@@ -266,8 +283,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const t = useCallback((key: MessageKey, values?: Record<string, string | number>) => translate(config.locale, key, values), [config.locale]);
 
   const value = useMemo<AppContextValue>(() => ({
-    config, ready, assetRevision, updateConfig, replaceConfig, touchAssets, t, notify,
-  }), [assetRevision, config, notify, ready, replaceConfig, t, touchAssets, updateConfig]);
+    config,
+    ready,
+    deploymentDefaults,
+    defaultConfig: applyDeploymentDefaults(cloneDefaultConfig(), deploymentDefaults),
+    refreshDeploymentDefaults,
+    assetRevision,
+    updateConfig,
+    replaceConfig,
+    touchAssets,
+    t,
+    notify,
+  }), [assetRevision, config, deploymentDefaults, notify, ready, refreshDeploymentDefaults, replaceConfig, t, touchAssets, updateConfig]);
 
   return (
     <AppContext.Provider value={value}>

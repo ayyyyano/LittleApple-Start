@@ -17,7 +17,7 @@ import {
 import type { ConfigExportV4 } from "@/types/config";
 
 export function DataSettings({ onFinished }: { onFinished: () => void }) {
-  const { config, replaceConfig, touchAssets, notify, t } = useApp();
+  const { config, replaceConfig, touchAssets, notify, t, refreshDeploymentDefaults } = useApp();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<ConfigExportV4 | null>(null);
   // Keep the last preview snapshot while Dialog owns its exit presence.
@@ -65,7 +65,7 @@ export function DataSettings({ onFinished }: { onFinished: () => void }) {
   async function reset() {
     setBusy(true);
     try {
-      const defaults = await resetAllConfiguration();
+      const defaults = await resetAllConfiguration(await refreshDeploymentDefaults());
       replaceConfig(defaults);
       touchAssets();
       setResetOpen(false);

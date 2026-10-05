@@ -2,7 +2,6 @@
 
 import { RotateCcw } from "react-feather";
 import { useApp } from "@/components/providers/AppProvider";
-import { cloneDefaultConfig } from "@/lib/default-config";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { LanguageSettings } from "@/components/settings/LanguageSettings";
 import { QuoteSettings } from "@/components/settings/QuoteSettings";
@@ -16,7 +15,7 @@ import { Input } from "@/components/ui/Input";
 import { Switch } from "@/components/ui/Switch";
 
 export function TimeContentSettings() {
-  const { config, updateConfig, t } = useApp();
+  const { config, defaultConfig, updateConfig, t } = useApp();
   const updateVisibility = (patch: Partial<typeof config.content.visibility>) => updateConfig((current) => ({
     ...current,
     content: { ...current.content, visibility: { ...current.content.visibility, ...patch } },
@@ -29,7 +28,7 @@ export function TimeContentSettings() {
   const legalEnabled = footerEnabled && config.content.footer.showLegal;
   const copyrightEnabled = footerEnabled && config.content.footer.showCopyright;
   const resetFooter = () => {
-    const footer = cloneDefaultConfig().content.footer;
+    const footer = defaultConfig.content.footer;
     updateConfig((current) => ({ ...current, content: { ...current.content, footer } }));
   };
   return (

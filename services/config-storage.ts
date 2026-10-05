@@ -1,4 +1,5 @@
 import { cloneDefaultConfig } from "@/lib/default-config";
+import { applyDeploymentDefaults, type DeploymentDefaults } from "@/lib/deployment-defaults";
 import { migrateLegacyConfig, migrateV2Config } from "@/lib/config-migrations";
 import { parseCurrentConfig } from "@/lib/config-parser";
 import { dataUrlToBlob, saveBackgroundAsset } from "@/services/background-storage";
@@ -64,14 +65,18 @@ async function migrateLegacyBackground(value: unknown, config: AppConfig): Promi
   if (id === "visual") config.appearance.backgroundType = value.type.startsWith("video/") ? "video" : "image";
 }
 
-export async function loadStoredConfig(): Promise<{ config: AppConfig; migratedLegacy: boolean; recovered: boolean }> {
+export function hasStoredConfig(): boolean {
+  return Boolean(localStorage.getItem(CONFIG_KEY) || localStorage.getItem(V3_CONFIG_KEY) || localStorage.getItem(V2_CONFIG_KEY));
+}
+
+export async function loadStoredConfig(deploymentDefaults: DeploymentDefaults = {}): Promise<{ config: AppConfig; migratedLegacy: boolean; recovered: boolean }> {
   const serialized = localStorage.getItem(CONFIG_KEY);
   if (serialized) {
     try {
       return { config: parseCurrentConfig(JSON.parse(serialized) as unknown), migratedLegacy: false, recovered: false };
     } catch {
       localStorage.removeItem(CONFIG_KEY);
-      const fallback = cloneDefaultConfig();
+      const fallback = applyDeploymentDefaults(cloneDefaultConfig(), deploymentDefaults);
       saveStoredConfig(fallback);
       return { config: fallback, migratedLegacy: false, recovered: true };
     }
@@ -112,7 +117,7 @@ export async function loadStoredConfig(): Promise<{ config: AppConfig; migratedL
   } catch {
     // A blocked legacy database must not prevent the start page from loading.
   }
-  const config = cloneDefaultConfig();
+  const config = applyDeploymentDefaults(cloneDefaultConfig(), deploymentDefaults);
   saveStoredConfig(config);
   return { config, migratedLegacy: false, recovered: false };
 }

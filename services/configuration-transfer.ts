@@ -1,4 +1,5 @@
 import { cloneDefaultConfig } from "@/lib/default-config";
+import { applyDeploymentDefaults, type DeploymentDefaults } from "@/lib/deployment-defaults";
 import { clearLegacyStorage, removeStoredConfig, saveStoredConfig } from "@/services/config-storage";
 import {
   clearBackgroundAssets,
@@ -62,12 +63,12 @@ export async function applyImportedConfiguration(payload: ConfigExportV4): Promi
   saveStoredConfig(payload.config);
 }
 
-export async function resetAllConfiguration(): Promise<AppConfig> {
+export async function resetAllConfiguration(deploymentDefaults: DeploymentDefaults = {}): Promise<AppConfig> {
   removeStoredConfig();
   clearQuoteCache();
   clearWeatherCache();
   await Promise.all([clearBackgroundAssets(), clearLegacyStorage()]);
-  const config = cloneDefaultConfig();
+  const config = applyDeploymentDefaults(cloneDefaultConfig(), deploymentDefaults);
   saveStoredConfig(config);
   return config;
 }

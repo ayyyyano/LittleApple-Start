@@ -95,6 +95,8 @@ export interface AppConfig {
   topActions: TopAction[];
   appearance: {
     backgroundType: BackgroundType;
+    /** Optional remote default seeded for a new deployment configuration. */
+    backgroundUrl?: string;
     backgroundFit: BackgroundFit;
     positionDesktop: string;
     positionMobile: string;
@@ -143,6 +145,8 @@ export interface AppConfig {
     };
     footer: {
       showLegal: boolean;
+      showIcp: boolean;
+      showPolice: boolean;
       showCopyright: boolean;
       copyrightText: string;
       icpText: string;
