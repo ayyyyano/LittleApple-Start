@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, ArrowUp, Edit2, Plus, Trash2 } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { QuickLinkEditor } from "@/components/quick-links/QuickLinkEditor";
 import { SettingGroup } from "@/components/settings/SettingGroup";
@@ -34,16 +34,16 @@ export function QuickLinksSettings() {
             <div className="settings-list-item" key={link.id}>
               <div><strong>{link.title}</strong><span>{link.url}</span></div>
               <div className="list-actions">
-                <Button variant="ghost" size="icon" aria-label={t("moveUp")} disabled={index === 0} onClick={() => updateConfig((current) => ({ ...current, quickLinks: moveItem(current.quickLinks, index, index - 1) }))}><ArrowUp size={16} /></Button>
-                <Button variant="ghost" size="icon" aria-label={t("moveDown")} disabled={index === config.quickLinks.length - 1} onClick={() => updateConfig((current) => ({ ...current, quickLinks: moveItem(current.quickLinks, index, index + 1) }))}><ArrowDown size={16} /></Button>
-                <Button variant="ghost" size="icon" aria-label={t("edit")} onClick={() => { setEditing(link); setOpen(true); }}><Edit2 size={16} /></Button>
-                <Button variant="ghost" size="icon" aria-label={t("remove")} onClick={() => updateConfig((current) => ({ ...current, quickLinks: current.quickLinks.filter((item) => item.id !== link.id) }))}><Trash2 size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("moveUp")} disabled={index === 0} onClick={() => updateConfig((current) => ({ ...current, quickLinks: moveItem(current.quickLinks, index, index - 1) }))}><AppIcon name="arrowUp" size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("moveDown")} disabled={index === config.quickLinks.length - 1} onClick={() => updateConfig((current) => ({ ...current, quickLinks: moveItem(current.quickLinks, index, index + 1) }))}><AppIcon name="arrowDown" size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("edit")} onClick={() => { setEditing(link); setOpen(true); }}><AppIcon name="edit" size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("remove")} onClick={() => updateConfig((current) => ({ ...current, quickLinks: current.quickLinks.filter((item) => item.id !== link.id) }))}><AppIcon name="delete" size={16} /></Button>
               </div>
             </div>
           ))}
         </div>
       )}
-      <Button variant="primary" onClick={() => { setEditing(undefined); setOpen(true); }}><Plus size={18} />{t("addQuickLink")}</Button>
+      <Button variant="primary" onClick={() => { setEditing(undefined); setOpen(true); }}><AppIcon name="add" size={18} />{t("addQuickLink")}</Button>
       <QuickLinkEditor open={open} onOpenChange={setOpen} editing={editing} modalDepth="nested" />
     </SettingGroup>
     <SettingGroup title={t("quickLinksLayout")}>

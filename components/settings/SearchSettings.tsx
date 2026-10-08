@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, ArrowUp, Edit2, Plus, Trash2 } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { SettingGroup } from "@/components/settings/SettingGroup";
 import { Button } from "@/components/ui/Button";
@@ -68,15 +68,15 @@ export function SearchSettings() {
             <div className="settings-list-item" key={engine.id}>
               <div><strong>{engine.name}</strong><span>{engine.urlTemplate}</span></div>
               <div className="list-actions">
-                <Button variant="ghost" size="icon" aria-label={t("moveUp")} disabled={index === 0} onClick={() => updateConfig((current) => ({ ...current, search: { ...current.search, engines: moveItem(current.search.engines, index, index - 1) } }))}><ArrowUp size={16} /></Button>
-                <Button variant="ghost" size="icon" aria-label={t("moveDown")} disabled={index === config.search.engines.length - 1} onClick={() => updateConfig((current) => ({ ...current, search: { ...current.search, engines: moveItem(current.search.engines, index, index + 1) } }))}><ArrowDown size={16} /></Button>
-                <Button variant="ghost" size="icon" aria-label={t("edit")} onClick={() => openEditor(engine)}><Edit2 size={16} /></Button>
-                <Button variant="ghost" size="icon" aria-label={t("remove")} disabled={config.search.engines.length <= 1} onClick={() => remove(engine)}><Trash2 size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("moveUp")} disabled={index === 0} onClick={() => updateConfig((current) => ({ ...current, search: { ...current.search, engines: moveItem(current.search.engines, index, index - 1) } }))}><AppIcon name="arrowUp" size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("moveDown")} disabled={index === config.search.engines.length - 1} onClick={() => updateConfig((current) => ({ ...current, search: { ...current.search, engines: moveItem(current.search.engines, index, index + 1) } }))}><AppIcon name="arrowDown" size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("edit")} onClick={() => openEditor(engine)}><AppIcon name="edit" size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("remove")} disabled={config.search.engines.length <= 1} onClick={() => remove(engine)}><AppIcon name="delete" size={16} /></Button>
               </div>
             </div>
           ))}
         </div>
-        <Button variant="primary" onClick={() => openEditor()}><Plus size={18} />{t("addEngine")}</Button>
+        <Button variant="primary" onClick={() => openEditor()}><AppIcon name="add" size={18} />{t("addEngine")}</Button>
       </SettingGroup>
       <Dialog open={open} onOpenChange={setOpen} title={editing ? t("editEngine") : t("addEngine")} closeLabel={t("close")} modalDepth="nested">
         <form className="form-stack" onSubmit={submit}>

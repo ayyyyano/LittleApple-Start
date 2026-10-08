@@ -81,6 +81,7 @@ function parseTopActions(value: unknown): TopAction[] {
       title: item.title.trim(),
       url: item.url,
       icon: typeof item.icon === "string" && item.icon.trim() ? item.icon.trim().slice(0, 40) : undefined,
+      iconProvider: item.iconProvider === "material" || item.iconProvider === "feather" ? item.iconProvider : undefined,
       openInNewTab: item.openInNewTab !== false,
     }];
   });
@@ -177,7 +178,11 @@ export function parseCurrentConfig(value: unknown): AppConfig {
     result.appearance.sakuraEnabled = booleanOr(appearance.sakuraEnabled, fallback.appearance.sakuraEnabled);
     if (appearance.paletteMode === "wallpaper" || appearance.paletteMode === "custom") result.appearance.paletteMode = appearance.paletteMode as PaletteMode;
     if (appearance.themeStrength === "soft" || appearance.themeStrength === "standard" || appearance.themeStrength === "vivid") result.appearance.themeStrength = appearance.themeStrength;
-    if (appearance.surfaceMode === "minimal" || appearance.surfaceMode === "glass" || appearance.surfaceMode === "liquid") result.appearance.surfaceMode = appearance.surfaceMode;
+    if (appearance.surfaceMode === "minimal" || appearance.surfaceMode === "material" || appearance.surfaceMode === "liquid") result.appearance.surfaceMode = appearance.surfaceMode;
+    // `standard` and `glass` were the former complete surface theme. Keep old
+    // exports/imports readable while converging runtime state on Material.
+    if (appearance.surfaceMode === "standard" || appearance.surfaceMode === "glass") result.appearance.surfaceMode = "material";
+    if (appearance.iconStyle === "auto" || appearance.iconStyle === "feather" || appearance.iconStyle === "material") result.appearance.iconStyle = appearance.iconStyle;
     if (typeof appearance.accentColor === "string" && isHexColor(appearance.accentColor)) result.appearance.accentColor = appearance.accentColor.toLowerCase();
     if (Array.isArray(appearance.wallpaperPalette)) {
       const palette = appearance.wallpaperPalette.filter((item): item is string => typeof item === "string" && isHexColor(item)).slice(0, 8);

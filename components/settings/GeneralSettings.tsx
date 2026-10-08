@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Monitor } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { SettingGroup } from "@/components/settings/SettingGroup";
 import { Switch } from "@/components/ui/Switch";
@@ -22,7 +22,7 @@ export function GeneralSettings() {
         />
       </SettingGroup>
       <SettingGroup title={t("homepage")}>
-        <Button onClick={() => setGuideOpen(true)}><Monitor size={18} />{t("homepageGuide")}<ExternalLink size={15} /></Button>
+        <Button onClick={() => setGuideOpen(true)}><AppIcon name="system" size={18} />{t("homepageGuide")}<AppIcon name="externalLink" size={15} /></Button>
       </SettingGroup>
       <Dialog open={guideOpen} onOpenChange={setGuideOpen} title={t("homepage")} closeLabel={t("close")} modalDepth="nested" description={t("homepageBody")}>
         <div className="browser-guide">

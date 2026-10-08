@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Clock, Database, Info, Link2, Menu, Sliders } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
+import type { SemanticIconName } from "@/lib/icons";
 import { Dialog } from "@/components/ui/Dialog";
 import { useApp } from "@/components/providers/AppProvider";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
@@ -12,12 +13,12 @@ import { AboutSettings } from "@/components/settings/AboutSettings";
 
 export type SettingsSection = "appearance" | "searchLinks" | "timeContent" | "data" | "about";
 
-const sections: Array<{ id: SettingsSection; icon: typeof Sliders }> = [
-  { id: "appearance", icon: Sliders },
-  { id: "searchLinks", icon: Link2 },
-  { id: "timeContent", icon: Clock },
-  { id: "data", icon: Database },
-  { id: "about", icon: Info },
+const sections: Array<{ id: SettingsSection; icon: SemanticIconName }> = [
+  { id: "appearance", icon: "appearance" },
+  { id: "searchLinks", icon: "link" },
+  { id: "timeContent", icon: "content" },
+  { id: "data", icon: "data" },
+  { id: "about", icon: "about" },
 ];
 
 export function SettingsPanel({
@@ -95,18 +96,19 @@ export function SettingsPanel({
           setSidebarCollapsed((value) => !value);
         }
       }}>
-        <Menu size={18} />
+        <AppIcon name="menu" size={18} />
       </button>}
       className={`settings-dialog${sidebarCollapsed ? " settings-dialog--sidebar-collapsed" : ""}${drawerOpen ? " settings-dialog--sidebar-drawer-open" : ""}`}
       fullScreenMobile
-      surfaceVariant="glass"
+      surfaceVariant="auto"
+      liquidRenderer={false}
       surfaceStyle={settingsSurfaceStyle}
     >
       <div id="settings-workspace" className="settings-layout">
         <nav className="settings-nav" aria-label={t("settings")} style={drawerOpen ? settingsSurfaceStyle : undefined}>
-          {sections.map(({ id, icon: Icon }) => (
+          {sections.map(({ id, icon }) => (
             <button key={id} type="button" className={section === id ? "is-active" : ""} aria-label={t(id)} aria-current={section === id ? "page" : undefined} onClick={() => { setSection(id); setDrawerOpen(false); }}>
-              <Icon size={18} /><span>{t(id)}</span>
+              <AppIcon name={icon} size={18} /><span>{t(id)}</span>
             </button>
           ))}
         </nav>

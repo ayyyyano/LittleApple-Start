@@ -17,7 +17,7 @@
 * Personalized wallpapers: supports image and video backgrounds with fill, fit, stretch, tile, and center layout modes.
 * Fine-grained controls: customize wallpaper focal point, overlay opacity, blur strength, and effects such as falling Sakura petals.
 * Palette extraction and accent colors: includes a preset palette, can extract tones from custom images, and supports manually specified accent colors.
-* Material and theme: includes Light and Dark themes with System support, plus Minimal, Standard Glass, and Liquid Glass materials. Liquid Glass is the default.
+* Theme materials: Light, Dark, and System modes are paired with three themes: Simple (Content First), Material (Color First), and Liquid Glass (Environment First, the default). 
 * Flexible composition: adjust overall and per-module scale, spacing, and the position of interface elements.
 
 ### Modules
@@ -33,13 +33,13 @@
 ## Tech Stack
 
 * Framework and language: Next.js 16 (App Router) / React 19 / TypeScript
-* Styling and UI: Tailwind CSS 4 + CSS Variables / Feather Icons / liquid-glass
+* Styling and UI: Tailwind CSS 4 + CSS Variables / Feather Icons / bundled semantic Material Symbols / liquid-glass
 * Interaction and storage: dnd-kit / IndexedDB + LocalStorage / APlayer
 * Testing and quality: Vitest / ESLint
 
 ## Deployment
 
-> No server database is required. Optional runtime deployment environment variables only seed new users and reset defaults; they never overwrite existing user configuration. Configuration and media files remain in each user's browser.
+> No server database is required. Optional runtime deployment environment variables only seed new users and reset defaults. Configuration and media files remain in each user's browser.
 
 ### Deploy with Vercel (Recommended)
 

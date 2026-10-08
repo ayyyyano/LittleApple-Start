@@ -1,6 +1,6 @@
 "use client";
 
-import { Info } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { SettingGroup } from "@/components/settings/SettingGroup";
 import { Input } from "@/components/ui/Input";
@@ -42,7 +42,7 @@ export function QuoteSettings() {
           <label className="field-label"><span>{t("quoteFallback")}</span><Input maxLength={280} value={provider.fallback} onChange={(event) => updateQuote({ ...provider, fallback: event.target.value })} /></label>
         </>
       )}
-      {provider.type !== "static" && <p className="context-note"><Info size={14} aria-hidden="true" /><span>{t("quoteNetworkNotice")}</span></p>}
+      {provider.type !== "static" && <p className="context-note"><AppIcon name="info" size={14} /><span>{t("quoteNetworkNotice")}</span></p>}
     </SettingGroup>
   );
 }

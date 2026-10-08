@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Eye } from "react-feather";
+import { AppIcon } from "@/components/ui/AppIcon";
 import { BackgroundRenderer } from "@/components/background/BackgroundRenderer";
 import { Clock } from "@/components/clock/Clock";
 import { Footer } from "@/components/layout/Footer";
@@ -128,8 +128,8 @@ export function HomeApp() {
       <BackgroundRenderer onReady={() => setBackgroundReady(true)} />
       {startupReady && <SeasonalNotice />}
       {startupReady && (config.general.minimized ? (
-        <Surface className="restore-interface-surface" variant="glass">
-          <button className="restore-interface" type="button" aria-label={t("restoreInterface")} title={t("restoreInterface")} onClick={() => restore(false)}><Eye size={19} /></button>
+        <Surface className="restore-interface-surface" variant="auto">
+          <button className="restore-interface" type="button" aria-label={t("restoreInterface")} title={t("restoreInterface")} onClick={() => restore(false)}><AppIcon name="eye" size={19} /></button>
         </Surface>
       ) : (
         <>

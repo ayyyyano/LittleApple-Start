@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertCircle, CheckCircle, Info, X } from "react-feather";
+import { AppIcon } from "@/components/ui/AppIcon";
 import { Button } from "@/components/ui/Button";
 
 export interface ToastItem {
@@ -62,9 +62,9 @@ export function ToastViewport({ items, onDismiss }: { items: ToastItem[]; onDism
     <div className="toast-viewport" aria-live="polite" aria-relevant="additions">
       {items.map((item) => (
         <div className={`toast toast--${item.tone}${exitingIds.has(item.id) ? " toast--exiting" : ""}`} key={item.id} role="status">
-          {item.tone === "success" ? <CheckCircle size={20} /> : item.tone === "warning" || item.tone === "danger" ? <AlertCircle size={20} /> : <Info size={20} />}
+          {item.tone === "success" ? <AppIcon name="check" size={20} /> : item.tone === "warning" || item.tone === "danger" ? <AppIcon name="alert" size={20} /> : <AppIcon name="info" size={20} />}
           <span>{item.message}</span>
-          <Button variant="ghost" size="icon" aria-label="Dismiss" onClick={() => beginDismiss(item.id)}><X size={16} /></Button>
+          <Button variant="ghost" size="icon" aria-label="Dismiss" onClick={() => beginDismiss(item.id)}><AppIcon name="close" size={16} /></Button>
         </div>
       ))}
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDown, ArrowUp, Edit2, Plus, Trash2 } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
 import { LinkEditor, type LinkDraft } from "@/components/links/LinkEditor";
 import { useApp } from "@/components/providers/AppProvider";
 import { SettingGroup } from "@/components/settings/SettingGroup";
@@ -34,16 +34,16 @@ export function TopActionsSettings() {
             <div className="settings-list-item" key={action.id}>
               <div><strong>{action.title}</strong><span>{action.url}</span></div>
               <div className="list-actions">
-                <Button variant="ghost" size="icon" aria-label={t("moveUp")} disabled={index === 0} onClick={() => updateConfig((current) => ({ ...current, topActions: moveItem(current.topActions, index, index - 1) }))}><ArrowUp size={16} /></Button>
-                <Button variant="ghost" size="icon" aria-label={t("moveDown")} disabled={index === config.topActions.length - 1} onClick={() => updateConfig((current) => ({ ...current, topActions: moveItem(current.topActions, index, index + 1) }))}><ArrowDown size={16} /></Button>
-                <Button variant="ghost" size="icon" aria-label={t("edit")} onClick={() => { setEditing(action); setOpen(true); }}><Edit2 size={16} /></Button>
-                <Button variant="ghost" size="icon" aria-label={t("remove")} onClick={() => updateConfig((current) => ({ ...current, topActions: current.topActions.filter((item) => item.id !== action.id) }))}><Trash2 size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("moveUp")} disabled={index === 0} onClick={() => updateConfig((current) => ({ ...current, topActions: moveItem(current.topActions, index, index - 1) }))}><AppIcon name="arrowUp" size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("moveDown")} disabled={index === config.topActions.length - 1} onClick={() => updateConfig((current) => ({ ...current, topActions: moveItem(current.topActions, index, index + 1) }))}><AppIcon name="arrowDown" size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("edit")} onClick={() => { setEditing(action); setOpen(true); }}><AppIcon name="edit" size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("remove")} onClick={() => updateConfig((current) => ({ ...current, topActions: current.topActions.filter((item) => item.id !== action.id) }))}><AppIcon name="delete" size={16} /></Button>
               </div>
             </div>
           ))}
         </div>
       )}
-      <Button variant="primary" disabled={config.topActions.length >= 4} onClick={() => { setEditing(undefined); setOpen(true); }}><Plus size={18} />{t("addTopAction")}</Button>
+      <Button variant="primary" disabled={config.topActions.length >= 4} onClick={() => { setEditing(undefined); setOpen(true); }}><AppIcon name="add" size={18} />{t("addTopAction")}</Button>
       <LinkEditor
         open={open}
         onOpenChange={setOpen}
@@ -51,7 +51,7 @@ export function TopActionsSettings() {
         heading={editing ? t("editTopAction") : t("addTopAction")}
         editing={editing}
         existing={config.topActions}
-        iconMode="feather"
+        iconMode="provider"
         onSave={save}
       />
     </SettingGroup>

@@ -97,6 +97,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const standardShadow = dark
         ? "0 28px 80px rgb(0 0 0 / .45), 0 2px 8px rgb(0 0 0 / .25)"
         : "0 24px 64px rgb(11 42 78 / .18), 0 2px 8px rgb(11 42 78 / .08)";
+      const materialShadow = dark
+        ? "0 8px 20px rgb(0 0 0 / .24), 0 1px 3px rgb(0 0 0 / .18)"
+        : "0 6px 18px rgb(11 42 78 / .12), 0 1px 3px rgb(11 42 78 / .08)";
       root.dataset.theme = dark ? "dark" : "light";
       root.style.colorScheme = dark ? "dark" : "only light";
       root.style.setProperty("--accent", tokens.accent);
@@ -114,8 +117,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       root.style.setProperty("--border-tint", tokens.borderTint);
       root.style.setProperty("--text", tokens.text);
       root.style.setProperty("--text-secondary", tokens.textSecondary);
+      root.style.setProperty("--liquid-on-surface", tokens.onSurface);
       root.style.setProperty("--danger", tokens.danger);
       root.style.setProperty("--danger-soft", tokens.dangerMuted);
+
+      // Material semantic roles. These stay derived from the existing accent,
+      // palette and strength settings rather than introducing a second color engine.
+      root.style.setProperty("--material-primary", tokens.primary);
+      root.style.setProperty("--material-on-primary", tokens.onPrimary);
+      root.style.setProperty("--material-primary-container", tokens.primaryContainer);
+      root.style.setProperty("--material-on-primary-container", tokens.onPrimaryContainer);
+      root.style.setProperty("--material-surface", tokens.surface);
+      root.style.setProperty("--material-on-surface", tokens.onSurface);
+      root.style.setProperty("--material-surface-variant", tokens.surfaceVariant);
+      root.style.setProperty("--material-on-surface-variant", tokens.onSurfaceVariant);
+      root.style.setProperty("--material-surface-container", tokens.surfaceContainer);
+      root.style.setProperty("--material-surface-container-high", tokens.surfaceContainerHigh);
+      root.style.setProperty("--material-surface-container-low", tokens.surfaceContainerLow);
+      root.style.setProperty("--material-outline", tokens.outline);
+      root.style.setProperty("--material-outline-variant", tokens.outlineVariant);
+      root.style.setProperty("--material-scrim", tokens.scrim);
+      root.style.setProperty("--material-error", tokens.error);
+      root.style.setProperty("--material-on-error", tokens.onError);
 
       root.style.setProperty("--standard-surface-color", tokens.surface);
       root.style.setProperty("--standard-surface-strong-color", tokens.surfaceElevated);
@@ -129,9 +152,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       root.style.setProperty("--standard-highlight", tokens.border);
       root.style.setProperty("--standard-overlay", "rgb(1 9 19 / .64)");
       root.style.setProperty("--standard-dialog-overlay-nested", dark ? "rgb(0 0 0 / .16)" : "rgb(35 45 55 / .14)");
+      // Keep old CSS variables as compatibility aliases for existing exports and
+      // components while Material becomes the only non-liquid full theme.
+      root.style.setProperty("--material-surface-color", tokens.surface);
+      root.style.setProperty("--material-surface-strong-color", tokens.surfaceElevated);
+      root.style.setProperty("--material-surface-glass-color", tokens.surfaceGlass);
+      root.style.setProperty("--material-surface-selected", tokens.surfaceSelected);
+      root.style.setProperty("--material-surface-hover", tokens.surfaceHover);
+      root.style.setProperty("--material-border", tokens.border);
+      root.style.setProperty("--material-border-strong", tokens.borderStrong);
+      root.style.setProperty("--material-border-tint", tokens.borderTint);
+      root.style.setProperty("--material-shadow", materialShadow);
+      root.style.setProperty("--material-dialog-shadow-root", standardShadow);
+      root.style.setProperty("--material-dialog-shadow-nested", dark ? "0 26px 70px rgb(0 0 0 / .38), 0 2px 8px rgb(0 0 0 / .2)" : "0 26px 70px rgb(11 42 78 / .2), 0 2px 8px rgb(11 42 78 / .1)");
+      root.style.setProperty("--material-dialog-shadow-nested-mobile", dark ? "0 -18px 34px -10px rgb(0 0 0 / .54), 0 -4px 12px -4px rgb(0 0 0 / .36), inset 0 1px 0 rgb(255 255 255 / .22)" : "0 -18px 34px -10px rgb(20 30 40 / .3), 0 -4px 12px -4px rgb(20 30 40 / .18), inset 0 1px 0 rgb(255 255 255 / .5)");
+      root.style.setProperty("--material-highlight", tokens.border);
+      root.style.setProperty("--material-overlay", "rgb(1 9 19 / .64)");
+      root.style.setProperty("--material-dialog-overlay-nested", dark ? "rgb(0 0 0 / .16)" : "rgb(35 45 55 / .14)");
 
-      root.style.setProperty("--minimal-surface-selected", tokens.surfaceSelected);
-      root.style.setProperty("--minimal-surface-hover", tokens.surfaceHover);
+      // Simple keeps interaction states neutral; accent is reserved for explicit
+      // primary actions rather than being used as a glass-like selected fill.
+      root.style.setProperty("--minimal-surface-selected", tokens.surfaceElevated);
+      root.style.setProperty("--minimal-surface-hover", tokens.surface);
       root.style.setProperty("--minimal-surface-color", tokens.surface);
       root.style.setProperty("--minimal-surface-strong-color", tokens.surfaceElevated);
       root.style.setProperty("--minimal-surface-glass-color", tokens.surfaceGlass);
@@ -195,7 +237,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const minimalProfile = { control: 0.9, controlHover: 0.96, panel: 0.94, panelStrong: 0.96, panelInner: 0.9 };
     const surfaceMix = (color: string, alpha: number) => `color-mix(in srgb, ${color} ${Math.round(alpha * 100)}%, transparent)`;
     const setProfile = (
-      prefix: "standard" | "liquid" | "minimal",
+      prefix: "material" | "standard" | "liquid" | "minimal",
       base: { surface: string; strong: string; glass: string },
       profile: { control: number; controlHover: number; panel: number; panelStrong: number; panelInner: number },
     ) => {
@@ -211,6 +253,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       strong: "var(--standard-surface-strong-color)",
       glass: "var(--standard-surface-glass-color)",
     }, standardProfile);
+    // Material owns opaque tonal containers. Unlike Liquid, its surfaces do
+    // not derive their identity from wallpaper transparency or backdrop blur.
+    root.style.setProperty("--material-surface-control", "var(--material-surface-container)");
+    root.style.setProperty("--material-surface-control-hover", "color-mix(in srgb, var(--material-primary) 10%, var(--material-surface-container))");
+    root.style.setProperty("--material-surface-panel", "var(--material-surface-container)");
+    root.style.setProperty("--material-surface-panel-strong", "var(--material-surface-container-high)");
+    root.style.setProperty("--material-surface-panel-inner", "var(--material-surface-container-low)");
     setProfile("liquid", {
       surface: "var(--liquid-surface-color)",
       strong: "var(--liquid-surface-strong-color)",
@@ -226,7 +275,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ? "liquid"
       : config.appearance.surfaceMode === "minimal"
         ? "minimal"
-        : "standard";
+        : "material";
     root.style.setProperty("--surface-control", `var(--${activePrefix}-surface-control)`);
     root.style.setProperty("--surface-control-hover", `var(--${activePrefix}-surface-control-hover)`);
     root.style.setProperty("--surface-panel", `var(--${activePrefix}-surface-panel)`);
@@ -246,12 +295,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--dialog-overlay-root", `var(--${activePrefix}-overlay)`);
     root.style.setProperty("--dialog-overlay-nested", `var(--${activePrefix}-dialog-overlay-nested)`);
     root.style.setProperty("--surface-active-strong-color", `var(--${activePrefix}-surface-strong-color)`);
-    root.style.setProperty("--state-hover-bg", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-hover)" : "color-mix(in srgb, var(--accent) 10%, transparent)");
+    const isMaterial = config.appearance.surfaceMode === "material";
+    const isMinimal = config.appearance.surfaceMode === "minimal";
+    root.style.setProperty("--state-hover-bg", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-hover)" : isMaterial ? "color-mix(in srgb, var(--material-primary) 10%, transparent)" : isMinimal ? "var(--minimal-surface-hover)" : "color-mix(in srgb, var(--accent) 10%, transparent)");
     root.style.setProperty("--state-hover-fg", "var(--text)");
-    root.style.setProperty("--state-selected-bg", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-selected)" : "color-mix(in srgb, var(--accent) 16%, transparent)");
-    root.style.setProperty("--state-selected-fg", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-fg)" : "var(--accent-strong)");
-    root.style.setProperty("--state-active-bg", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-active)" : "color-mix(in srgb, var(--accent) 22%, transparent)");
-    root.style.setProperty("--state-active-fg", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-fg)" : "var(--accent-strong)");
+    root.style.setProperty("--state-selected-bg", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-selected)" : isMaterial ? "var(--material-primary-container)" : isMinimal ? "var(--minimal-surface-selected)" : "color-mix(in srgb, var(--accent) 16%, transparent)");
+    root.style.setProperty("--state-selected-fg", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-fg)" : isMaterial ? "var(--material-on-primary-container)" : isMinimal ? "var(--text)" : "var(--accent-strong)");
+    root.style.setProperty("--state-active-bg", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-active)" : isMaterial ? "var(--material-primary-container)" : isMinimal ? "var(--minimal-surface-hover)" : "color-mix(in srgb, var(--accent) 22%, transparent)");
+    root.style.setProperty("--state-active-fg", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-fg)" : isMaterial ? "var(--material-on-primary-container)" : isMinimal ? "var(--text)" : "var(--accent-strong)");
     root.style.setProperty("--state-focus-ring", "var(--focus)");
     root.style.setProperty("--state-danger-fg", "var(--danger)");
     root.style.setProperty("--state-danger-hover-bg", "color-mix(in srgb, var(--danger) 14%, transparent)");
@@ -266,8 +317,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--peripheral-active-fg", "var(--accent-strong)");
     root.style.setProperty("--peripheral-active-tint", config.appearance.surfaceMode === "liquid" ? "color-mix(in srgb, var(--accent) 12%, transparent)" : "var(--state-active-bg)");
     root.style.setProperty("--peripheral-focus-ring", "var(--focus)");
-    root.style.setProperty("--primary-bg", "var(--accent)");
-    root.style.setProperty("--primary-fg", "var(--on-accent)");
+    root.style.setProperty("--primary-bg", isMaterial ? "var(--material-primary)" : "var(--accent)");
+    root.style.setProperty("--primary-fg", isMaterial ? "var(--material-on-primary)" : "var(--on-accent)");
     root.style.setProperty("--liquid-state-hover", "var(--liquid-menu-hover)");
     root.style.setProperty("--liquid-state-selected", "var(--liquid-menu-selected)");
     root.style.setProperty("--liquid-state-active", "color-mix(in srgb, var(--accent) 24%, transparent)");

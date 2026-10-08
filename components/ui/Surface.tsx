@@ -2,6 +2,7 @@
 
 import { Component, lazy, Suspense, type CSSProperties, type ReactNode } from "react";
 import { useApp } from "@/components/providers/AppProvider";
+import { canUseLiquidRenderer } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import type { SurfaceMode } from "@/types/config";
 
@@ -10,7 +11,7 @@ const LiquidGlass = lazy(() => import("@samasante/liquid-glass").then((module) =
 interface SurfaceProps {
   children?: ReactNode;
   className?: string;
-  variant?: SurfaceMode | "auto";
+  variant?: SurfaceMode | "auto" | "glass" | "standard";
   as?: "div" | "section" | "nav";
   id?: string;
   role?: string;
@@ -30,20 +31,22 @@ class LiquidBoundary extends Component<BoundaryProps, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
   componentDidCatch() {
-    // The standard glass fallback remains fully interactive.
+    // The CSS surface fallback remains fully interactive.
   }
   render() { return this.state.failed ? this.props.fallback : this.props.children; }
 }
 
 export function Surface({ children, className, variant = "auto", as: Tag = "div", id, role, ariaLabel, style, liquidRenderer = true }: SurfaceProps) {
   const { config } = useApp();
-  const mode = variant === "auto" ? config.appearance.surfaceMode : variant;
-  const fallbackStyle = mode === "liquid" && !liquidRenderer
+  const requestedMode = variant === "auto" ? config.appearance.surfaceMode : variant;
+  const mode: SurfaceMode = requestedMode === "glass" || requestedMode === "standard" ? "material" : requestedMode;
+  const useTrueLiquid = canUseLiquidRenderer(mode, mode === "liquid", liquidRenderer);
+  const fallbackStyle = mode === "liquid" && !useTrueLiquid
     ? { ...LIQUID_VISUAL_STYLE, ...style }
     : style;
-  const fallback = <Tag id={id} role={role} aria-label={ariaLabel} style={fallbackStyle} className={cn("surface", `surface--${mode === "minimal" ? "minimal" : "glass"}`, className)}>{children}</Tag>;
+  const fallback = <Tag id={id} role={role} aria-label={ariaLabel} style={fallbackStyle} className={cn("surface", `surface--${mode}`, className)}>{children}</Tag>;
 
-  if (mode !== "liquid" || !liquidRenderer) return fallback;
+  if (!useTrueLiquid) return fallback;
 
   // Keep the base surface mounted while the optional renderer loads. The
   // renderer's layout styles are retained, while its duplicate material

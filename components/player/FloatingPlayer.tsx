@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Music } from "react-feather";
+import { AppIcon } from "@/components/ui/AppIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { Surface } from "@/components/ui/Surface";
 
@@ -55,7 +55,7 @@ export function FloatingPlayer() {
       {hasOpened && <div className="floating-player-panel" aria-hidden={!expanded}><APlayerPanel onCollapse={() => setExpanded(false)} /></div>}
       {!expanded && (
         <Surface className="floating-player-trigger-surface" variant="auto">
-          <button className="floating-player-trigger" type="button" aria-label={t("expandPlayer")} aria-expanded="false" onClick={() => { setHasOpened(true); window.requestAnimationFrame(() => setExpanded(true)); }}><Music size={19} /></button>
+          <button className="floating-player-trigger" type="button" aria-label={t("expandPlayer")} aria-expanded="false" onClick={() => { setHasOpened(true); window.requestAnimationFrame(() => setExpanded(true)); }}><AppIcon name="music" size={19} /></button>
         </Surface>
       )}
     </aside>

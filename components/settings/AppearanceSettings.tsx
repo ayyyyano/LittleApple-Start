@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Download, Image as ImageIcon, Music, RefreshCw, RotateCcw, Trash2, Video } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { SettingGroup } from "@/components/settings/SettingGroup";
 import { Button } from "@/components/ui/Button";
@@ -126,6 +126,7 @@ export function AppearanceSettings() {
       wallpaperPalette: defaults.appearance.wallpaperPalette,
       themeStrength: defaults.appearance.themeStrength,
       surfaceMode: defaults.appearance.surfaceMode,
+      iconStyle: defaults.appearance.iconStyle,
       glassTint: defaults.appearance.glassTint,
     } }));
     setCustomColor(defaults.appearance.accentColor);
@@ -163,10 +164,10 @@ export function AppearanceSettings() {
         <div className="wallpaper-resource-group">
           <h5>{t("backgroundResources")}</h5>
           <div className="button-grid">
-            <Button onClick={() => imageInput.current?.click()}><ImageIcon size={18} />{t("uploadImage")}</Button>
-            <Button onClick={() => videoInput.current?.click()}><Video size={18} />{t("uploadVideo")}</Button>
-            <Button onClick={exportBackground} disabled={config.appearance.backgroundType === "none"}><Download size={18} />{t("exportBackground")}</Button>
-            <Button variant="danger" onClick={() => remove("visual")} disabled={config.appearance.backgroundType === "none"}><Trash2 size={18} />{t("removeBackground")}</Button>
+            <Button onClick={() => imageInput.current?.click()}><AppIcon name="image" size={18} />{t("uploadImage")}</Button>
+            <Button onClick={() => videoInput.current?.click()}><AppIcon name="video" size={18} />{t("uploadVideo")}</Button>
+            <Button onClick={exportBackground} disabled={config.appearance.backgroundType === "none"}><AppIcon name="download" size={18} />{t("exportBackground")}</Button>
+            <Button variant="danger" onClick={() => remove("visual")} disabled={config.appearance.backgroundType === "none"}><AppIcon name="delete" size={18} />{t("removeBackground")}</Button>
           </div>
         </div>
         <div className="wallpaper-resource-group">
@@ -175,8 +176,8 @@ export function AppearanceSettings() {
             <span className={hasAudio ? "is-ready" : undefined}>{hasAudio ? t("audioReady") : t("audioEmpty")}</span>
           </div>
           <div className="button-grid">
-            <Button onClick={() => audioInput.current?.click()}><Music size={18} />{hasAudio ? t("replaceAudio") : t("uploadAudio")}</Button>
-            <Button variant="danger" onClick={() => remove("audio")} disabled={!hasAudio}><Trash2 size={18} />{t("removeAudio")}</Button>
+            <Button onClick={() => audioInput.current?.click()}><AppIcon name="audio" size={18} />{hasAudio ? t("replaceAudio") : t("uploadAudio")}</Button>
+            <Button variant="danger" onClick={() => remove("audio")} disabled={!hasAudio}><AppIcon name="delete" size={18} />{t("removeAudio")}</Button>
           </div>
           <Switch checked={hasAudio && config.appearance.playBackgroundAudio} disabled={!hasAudio} onCheckedChange={(value) => updateAppearance({ playBackgroundAudio: value })} label={t("playAudio")} />
         </div>
@@ -203,7 +204,7 @@ export function AppearanceSettings() {
           <Slider label={t("focalX")} value={config.appearance.focalX} min={0} max={100} unit="%" onChange={(value) => updateAppearance({ focalX: value })} />
           <Slider label={t("focalY")} value={config.appearance.focalY} min={0} max={100} unit="%" onChange={(value) => updateAppearance({ focalY: value })} />
         </>}
-        <div className="section-reset"><Button variant="ghost" size="sm" onClick={resetBackgroundSettings}><RotateCcw size={15} />{t("resetBackgroundSettings")}</Button></div>
+        <div className="section-reset"><Button variant="ghost" size="sm" onClick={resetBackgroundSettings}><AppIcon name="reset" size={15} />{t("resetBackgroundSettings")}</Button></div>
       </SettingGroup>
 
       <SettingGroup title={t("palette")}>
@@ -225,20 +226,25 @@ export function AppearanceSettings() {
           {config.appearance.wallpaperPalette.map((color) => (
             <button key={color} type="button" className={config.appearance.accentColor === color ? "is-selected" : ""} style={{ backgroundColor: color }} aria-label={color} aria-pressed={config.appearance.accentColor === color} onClick={() => updateAppearance({ paletteMode: "wallpaper", accentColor: color })} />
           ))}
-          <Button size="sm" onClick={() => extractColors()} disabled={extracting || config.appearance.backgroundType === "video"}><RefreshCw size={15} />{extracting ? t("extractingColors") : t("extractColors")}</Button>
+          <Button size="sm" onClick={() => extractColors()} disabled={extracting || config.appearance.backgroundType === "video"}><AppIcon name="refresh" size={15} />{extracting ? t("extractingColors") : t("extractColors")}</Button>
         </div>
         <div className="color-fields">
           <input className="color-picker" type="color" value={normalizeHex(config.appearance.accentColor)} aria-label={t("accentColor")} onChange={(event) => applyCustomColor(event.target.value)} />
           <label className="field-label"><span>{t("accentHex")}</span><Input value={customColor} maxLength={7} onChange={(event) => applyCustomColor(event.target.value)} aria-invalid={customColor.length > 0 && !isHexColor(customColor)} /></label>
         </div>
         <Slider label={t("glassTint")} value={config.appearance.glassTint} min={0} max={18} unit="%" onChange={(value) => updateAppearance({ glassTint: value })} />
-        <div className="section-reset"><Button variant="ghost" size="sm" onClick={resetTheme}><RotateCcw size={15} />{t("resetTheme")}</Button></div>
+        <div className="section-reset"><Button variant="ghost" size="sm" onClick={resetTheme}><AppIcon name="reset" size={15} />{t("resetTheme")}</Button></div>
       </SettingGroup>
 
       <SettingGroup title={t("readability")}>
         <label className="field-label" htmlFor="surface-mode-select"><span>{t("surfaceMode")}</span>
           <Select id="surface-mode-select" value={config.appearance.surfaceMode} ariaLabel={t("surfaceMode")} onValueChange={(value) => updateAppearance({ surfaceMode: value as SurfaceMode })} options={[
-            { value: "minimal", label: t("surfaceMinimal") }, { value: "glass", label: t("surfaceGlass") }, { value: "liquid", label: t("surfaceLiquid") },
+            { value: "minimal", label: t("surfaceMinimal") }, { value: "material", label: t("surfaceMaterial") }, { value: "liquid", label: t("surfaceLiquid") },
+          ]} />
+        </label>
+        <label className="field-label" htmlFor="icon-style-select"><span>{t("iconStyle")}</span>
+          <Select id="icon-style-select" value={config.appearance.iconStyle} ariaLabel={t("iconStyle")} onValueChange={(value) => updateAppearance({ iconStyle: value as AppConfig["appearance"]["iconStyle"] })} options={[
+            { value: "auto", label: t("iconAuto") }, { value: "feather", label: t("iconFeather") }, { value: "material", label: t("iconMaterial") },
           ]} />
         </label>
         <Slider label={t("backgroundBlur")} value={config.appearance.blur} min={0} max={24} unit="px" onChange={(value) => updateAppearance({ blur: value })} />
@@ -264,7 +270,7 @@ export function AppearanceSettings() {
           <Slider label={t("compositionX")} value={config.appearance.composition.x} min={35} max={65} unit="%" onChange={(value) => updateAppearance({ composition: { ...config.appearance.composition, x: value } })} />
           <Slider label={t("compositionY")} value={config.appearance.composition.y} min={35} max={65} unit="%" onChange={(value) => updateAppearance({ composition: { ...config.appearance.composition, y: value } })} />
         </div>
-        <div className="section-reset"><Button variant="ghost" size="sm" onClick={resetLayout}><RotateCcw size={15} />{t("resetLayout")}</Button></div>
+        <div className="section-reset"><Button variant="ghost" size="sm" onClick={resetLayout}><AppIcon name="reset" size={15} />{t("resetLayout")}</Button></div>
       </SettingGroup>
     </div>
   );

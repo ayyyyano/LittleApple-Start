@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { LanguageSettings } from "@/components/settings/LanguageSettings";
@@ -52,7 +52,7 @@ export function TimeContentSettings() {
         <label className="field-label" htmlFor="footer-police-url"><span>{t("policeUrl")}</span><Input id="footer-police-url" type="url" value={config.content.footer.policeUrl} disabled={!legalEnabled} maxLength={500} onChange={(event) => updateFooter({ policeUrl: event.target.value.slice(0, 500) })} /></label>
         <Switch checked={config.content.footer.showCopyright} disabled={!footerEnabled} onCheckedChange={(value) => updateFooter({ showCopyright: value })} label={t("showCopyright")} />
         <label className="field-label" htmlFor="footer-copyright"><span>{t("copyrightText")}</span><Input id="footer-copyright" value={config.content.footer.copyrightText} disabled={!copyrightEnabled} maxLength={160} onChange={(event) => updateFooter({ copyrightText: event.target.value.slice(0, 160) })} /></label>
-        <div className="section-reset"><Button size="sm" variant="ghost" onClick={resetFooter}><RotateCcw size={15} />{t("resetFooter")}</Button></div>
+        <div className="section-reset"><Button size="sm" variant="ghost" onClick={resetFooter}><AppIcon name="reset" size={15} />{t("resetFooter")}</Button></div>
       </SettingGroup>
       <SettingGroup title={t("language")}><LanguageSettings /></SettingGroup>
       <GeneralSettings />

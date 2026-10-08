@@ -42,6 +42,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     paletteMode: "wallpaper",
     themeStrength: "standard",
     surfaceMode: "liquid",
+    iconStyle: "auto",
     accentColor: DEFAULT_BACKGROUND.accentColor,
     wallpaperPalette: [...DEFAULT_BACKGROUND.palette],
     overallScale: 100,

@@ -12,7 +12,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Edit2, MoreHorizontal, Move, Plus, Trash2 } from "react-feather";
+import { AppIcon } from "@/components/ui/AppIcon";
 import { Button } from "@/components/ui/Button";
 import { LIQUID_VISUAL_STYLE } from "@/components/ui/Surface";
 import { useApp } from "@/components/providers/AppProvider";
@@ -81,18 +81,18 @@ function SortableQuickLink({
     <div ref={setNodeRef} style={style} className={`quick-link ${isDragging ? "is-dragging" : ""}`} onContextMenu={handleContextMenu}>
       <span aria-hidden="true" className="quick-link-backdrop" style={visualStyle} />
       <div className="quick-link-content">
-        <button className="drag-handle" type="button" aria-label={`${draggingLabel}: ${link.title}`} {...attributes} {...listeners}><Move size={16} /></button>
+        <button className="drag-handle" type="button" aria-label={`${draggingLabel}: ${link.title}`} {...attributes} {...listeners}><AppIcon name="drag" size={16} /></button>
         <a href={isSafeHttpUrl(link.url) ? link.url : "#"} target={link.openInNewTab ? "_blank" : undefined} rel={link.openInNewTab ? "noopener noreferrer" : undefined}>
           <span className="quick-link-icon">
             <LinkIcon title={link.title} url={link.url} customIcon={link.icon} />
           </span>
           <span className="quick-link-title">{link.title}</span>
         </a>
-        <Button className="quick-link-actions" variant="ghost" size="icon" aria-label={`${actionsLabel}: ${link.title}`} aria-expanded={actionsOpen} onClick={() => onActionsOpenChange(!actionsOpen)}><MoreHorizontal size={16} /></Button>
+        <Button className="quick-link-actions" variant="ghost" size="icon" aria-label={`${actionsLabel}: ${link.title}`} aria-expanded={actionsOpen} onClick={() => onActionsOpenChange(!actionsOpen)}><AppIcon name="more" size={16} /></Button>
         {menuMounted && (
           <div className={`quick-link-menu${menuExiting ? " quick-link-menu--exiting" : ""}`} style={visualStyle} aria-hidden={!actionsOpen}>
-            <button type="button" onClick={() => { onActionsOpenChange(false); onEdit(); }}><Edit2 size={16} />{editLabel}</button>
-            <button type="button" className="danger-text" onClick={() => { onActionsOpenChange(false); onDelete(); }}><Trash2 size={16} />{deleteLabel}</button>
+            <button type="button" onClick={() => { onActionsOpenChange(false); onEdit(); }}><AppIcon name="edit" size={16} />{editLabel}</button>
+            <button type="button" className="danger-text" onClick={() => { onActionsOpenChange(false); onDelete(); }}><AppIcon name="delete" size={16} />{deleteLabel}</button>
           </div>
         )}
       </div>
@@ -136,7 +136,7 @@ export function QuickLinksGrid() {
     <section className="quick-links-section" aria-label={t("quickLinks")}>
       {config.quickLinks.length === 0 ? (
         <div className="empty-state">
-          <button className="empty-add" type="button" aria-label={t("addQuickLink")} onClick={() => { setEditing(undefined); setEditorOpen(true); }}><Plus size={24} /></button>
+          <button className="empty-add" type="button" aria-label={t("addQuickLink")} onClick={() => { setEditing(undefined); setEditorOpen(true); }}><AppIcon name="add" size={24} /></button>
           <strong>{t("noQuickLinks")}</strong>
           <p>{t("noQuickLinksHint")}</p>
         </div>
@@ -160,7 +160,7 @@ export function QuickLinksGrid() {
               ))}
               <button className="quick-link quick-link--add" type="button" onClick={() => { setOpenActionsId(null); setEditing(undefined); setEditorOpen(true); }}>
                 <span aria-hidden="true" className="quick-link-backdrop" style={config.appearance.surfaceMode === "liquid" ? LIQUID_VISUAL_STYLE : undefined} />
-                <span className="quick-link-content quick-link-add-content"><Plus size={24} /><span>{t("addQuickLink")}</span></span>
+                <span className="quick-link-content quick-link-add-content"><AppIcon name="add" size={24} /><span>{t("addQuickLink")}</span></span>
               </button>
             </div>
           </SortableContext>

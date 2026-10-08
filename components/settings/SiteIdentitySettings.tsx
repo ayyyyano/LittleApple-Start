@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { RotateCcw, Trash2, Upload } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -82,10 +82,10 @@ export function SiteIdentitySettings() {
       </label>
       <div className="identity-actions">
         <input ref={inputRef} className="sr-only" type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleAvatar(file); event.target.value = ""; }} />
-        <Button size="sm" onClick={() => inputRef.current?.click()}><Upload size={15} />{config.siteIdentity.avatarAssetId ? t("replaceAvatar") : t("uploadAvatar")}</Button>
-        <Button size="sm" variant="ghost" disabled={!config.siteIdentity.avatarAssetId} onClick={() => void resetLogo()}><Trash2 size={15} />{t("resetLogo")}</Button>
+        <Button size="sm" onClick={() => inputRef.current?.click()}><AppIcon name="upload" size={15} />{config.siteIdentity.avatarAssetId ? t("replaceAvatar") : t("uploadAvatar")}</Button>
+        <Button size="sm" variant="ghost" disabled={!config.siteIdentity.avatarAssetId} onClick={() => void resetLogo()}><AppIcon name="delete" size={15} />{t("resetLogo")}</Button>
       </div>
-      <div className="identity-actions identity-actions--reset"><Button size="sm" variant="secondary" onClick={() => void resetIdentity()}><RotateCcw size={15} />{t("resetIdentity")}</Button></div>
+      <div className="identity-actions identity-actions--reset"><Button size="sm" variant="secondary" onClick={() => void resetIdentity()}><AppIcon name="reset" size={15} />{t("resetIdentity")}</Button></div>
     </SettingGroup>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Edit2, Music, Plus, Trash2 } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { SettingGroup } from "@/components/settings/SettingGroup";
 import { Button } from "@/components/ui/Button";
@@ -68,10 +68,10 @@ export function APlayerSettings() {
         {player.playlist.length ? <div className="settings-list">{player.playlist.map((track) => (
           <div className="settings-list-item" key={track.id}>
             <div><strong>{track.title}</strong><span>{track.artist || t("unknownArtist")}</span></div>
-            <div className="list-actions"><Button variant="ghost" size="icon" aria-label={t("edit")} onClick={() => { setEditing(track); setOpen(true); }}><Edit2 size={16} /></Button><Button variant="ghost" size="icon" aria-label={t("remove")} onClick={() => updatePlayer({ playlist: player.playlist.filter((item) => item.id !== track.id) })}><Trash2 size={16} /></Button></div>
+            <div className="list-actions"><Button variant="ghost" size="icon" aria-label={t("edit")} onClick={() => { setEditing(track); setOpen(true); }}><AppIcon name="edit" size={16} /></Button><Button variant="ghost" size="icon" aria-label={t("remove")} onClick={() => updatePlayer({ playlist: player.playlist.filter((item) => item.id !== track.id) })}><AppIcon name="delete" size={16} /></Button></div>
           </div>
-        ))}</div> : <div className="compact-empty"><Music size={18} /><span>{t("playerEmpty")}</span></div>}
-        <Button size="sm" onClick={() => { setEditing(undefined); setOpen(true); }}><Plus size={17} />{t("addTrack")}</Button>
+        ))}</div> : <div className="compact-empty"><AppIcon name="music" size={18} /><span>{t("playerEmpty")}</span></div>}
+        <Button size="sm" onClick={() => { setEditing(undefined); setOpen(true); }}><AppIcon name="add" size={17} />{t("addTrack")}</Button>
       </>}
       <TrackEditor key={editing?.id ?? "new"} open={open} onOpenChange={setOpen} editing={editing} onSave={save} />
     </SettingGroup>

@@ -92,4 +92,21 @@ describe("configuration parser", () => {
     expect(parsed.version).toBe(4);
     expect(parsed.background?.visual?.mimeType).toBe("image/png");
   });
+
+  it("normalizes the former Standard surface to Material and defaults icon style to auto", () => {
+    const config = cloneDefaultConfig();
+    const parsed = parseCurrentConfig({ ...config, appearance: { ...config.appearance, surfaceMode: "standard", iconStyle: undefined } });
+    expect(parsed.appearance.surfaceMode).toBe("material");
+    expect(parsed.appearance.iconStyle).toBe("auto");
+  });
+
+  it("accepts explicit icon providers on top actions while preserving legacy omissions", () => {
+    const config = cloneDefaultConfig();
+    const parsed = parseCurrentConfig({ ...config, topActions: [
+      { id: "one", title: "One", url: "https://example.com", icon: "github", openInNewTab: true },
+      { id: "two", title: "Two", url: "https://example.com", icon: "public", iconProvider: "material", openInNewTab: true },
+    ] });
+    expect(parsed.topActions[0].iconProvider).toBeUndefined();
+    expect(parsed.topActions[1].iconProvider).toBe("material");
+  });
 });

@@ -16,6 +16,21 @@ export interface ThemeTokens {
   textSecondary: string;
   danger: string;
   dangerMuted: string;
+  primary: string;
+  onPrimary: string;
+  primaryContainer: string;
+  onPrimaryContainer: string;
+  onSurface: string;
+  surfaceVariant: string;
+  onSurfaceVariant: string;
+  surfaceContainer: string;
+  surfaceContainerHigh: string;
+  surfaceContainerLow: string;
+  outline: string;
+  outlineVariant: string;
+  scrim: string;
+  error: string;
+  onError: string;
 }
 
 export interface LiquidSurfaceTokens {
@@ -89,6 +104,12 @@ export function createThemeTokens(accentInput: string, dark: boolean, glassTint:
   const elevated = mix(dark ? "#0e1c31" : "#ffffff", normalizeHex(accentInput), tintRatio * 0.7);
   const accent = ensureAccentContrast(accentInput, tintedSurface, dark);
   const onAccent = contrastRatio(accent, "#ffffff") >= contrastRatio(accent, "#07101f") ? "#ffffff" : "#07101f";
+  const primaryContainer = mix(tintedSurface, accent, Math.min(0.32, 0.14 * strengthFactor));
+  const onPrimaryContainer = dark ? "#e7f0ff" : "#10233f";
+  const surfaceVariant = mix(tintedSurface, accent, Math.min(0.12, 0.045 * strengthFactor));
+  const outline = mix(tintedSurface, dark ? "#c4d2e3" : "#4f637a", dark ? 0.3 : 0.24);
+  const outlineVariant = mix(tintedSurface, accent, Math.min(0.22, 0.1 * strengthFactor));
+  const error = dark ? "#ffb4ab" : "#ba1a1a";
   return {
     accent,
     accentHover: mix(accent, dark ? "#ffffff" : "#07101f", 0.16),
@@ -107,6 +128,21 @@ export function createThemeTokens(accentInput: string, dark: boolean, glassTint:
     textSecondary: dark ? "#adbed3" : "#52677f",
     danger: dark ? "#ff718a" : "#c92548",
     dangerMuted: dark ? "#4a1926" : "#ffe5eb",
+    primary: accent,
+    onPrimary: onAccent,
+    primaryContainer,
+    onPrimaryContainer,
+    onSurface: dark ? "#f3f8ff" : "#10233f",
+    surfaceVariant,
+    onSurfaceVariant: dark ? "#c1cad7" : "#52677f",
+    surfaceContainer: mix(tintedSurface, dark ? "#ffffff" : "#07101f", dark ? 0.05 : 0.025),
+    surfaceContainerHigh: elevated,
+    surfaceContainerLow: mix(tintedSurface, dark ? "#ffffff" : "#ffffff", dark ? 0.02 : 0.42),
+    outline,
+    outlineVariant,
+    scrim: "rgb(0 0 0 / .52)",
+    error,
+    onError: "#ffffff",
   };
 }
 

@@ -2,7 +2,7 @@
 
 import { createPortal } from "react-dom";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown } from "react-feather";
+import { AppIcon } from "@/components/ui/AppIcon";
 import { cn } from "@/lib/utils";
 
 export interface SelectOption {
@@ -138,7 +138,7 @@ export function Select({ id, value, options, onValueChange, className, ariaLabel
           }
         }}
       >
-        <span>{selected?.label ?? "—"}</span><ChevronDown aria-hidden="true" size={16} strokeWidth={2} />
+        <span>{selected?.label ?? "—"}</span><AppIcon name="chevronDown" size={16} />
       </button>
       {listMounted && typeof document !== "undefined" && createPortal(
         <div ref={listRef} id={listId} className={cn("ui-select-list", listExiting && "ui-select-list--exiting")} role="listbox" aria-label={ariaLabel} aria-hidden={!open} style={{ left: placement.left, top: placement.top, width: placement.width, maxHeight: placement.maxHeight }}>
@@ -155,7 +155,7 @@ export function Select({ id, value, options, onValueChange, className, ariaLabel
               onPointerMove={() => !option.disabled && setActiveIndex(index)}
               onClick={() => commit(index)}
             >
-              <span>{option.label}</span>{option.value === value ? <Check size={16} aria-hidden="true" /> : null}
+              <span>{option.label}</span>{option.value === value ? <AppIcon name="check" size={16} /> : null}
             </button>
           ))}
         </div>,

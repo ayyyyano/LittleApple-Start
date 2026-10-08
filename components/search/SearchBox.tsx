@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { ArrowRight, Search as SearchIcon } from "react-feather";
+import { AppIcon } from "@/components/ui/AppIcon";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -74,7 +74,7 @@ export function SearchBox() {
         <form className="search-row" onSubmit={(event) => { event.preventDefault(); search(); }}>
         <label className="sr-only" htmlFor="main-search">{t("searchLabel")}</label>
         <div className="search-input-wrap">
-          <SearchIcon size={20} aria-hidden="true" />
+          <AppIcon name="search" size={20} />
           <Input
             id="main-search"
             type="search"
@@ -112,7 +112,7 @@ export function SearchBox() {
               </button>
               {suggestions.map((suggestion, index) => (
                 <button id={`${listId}-${index + 1}`} key={suggestion} type="button" role="option" aria-selected={activeIndex === index + 1} onClick={() => { setQuery(suggestion); setOpen(false); }}>
-                  <SearchIcon size={16} />{suggestion}
+                  <AppIcon name="search" size={16} />{suggestion}
                 </button>
               ))}
               {loading && <div className="suggestions-state">{t("suggestionsLoading")}</div>}
@@ -130,7 +130,7 @@ export function SearchBox() {
           onValueChange={(value) => updateConfig((current) => ({ ...current, search: { ...current.search, defaultEngineId: value } }))}
         />
         <Button className="search-submit" variant="primary" size="icon" type="submit" aria-label={t("searchButton")}>
-          <ArrowRight size={19} />
+          <AppIcon name="forward" size={19} />
         </Button>
         </form>
       </div>

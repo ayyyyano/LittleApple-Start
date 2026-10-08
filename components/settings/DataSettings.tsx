@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Download, RotateCcw, Upload } from "react-feather";
+import { SettingsIcon as AppIcon } from "@/components/settings/SettingsIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { SettingGroup } from "@/components/settings/SettingGroup";
 import { Button } from "@/components/ui/Button";
@@ -83,13 +83,13 @@ export function DataSettings({ onFinished }: { onFinished: () => void }) {
           label={t("autoDownload")}
         />
         <div className="button-grid">
-          <Button onClick={exportConfig} disabled={busy}><Download size={18} />{t("exportConfig")}</Button>
-          <Button onClick={() => inputRef.current?.click()} disabled={busy}><Upload size={18} />{t("importConfig")}</Button>
+          <Button onClick={exportConfig} disabled={busy}><AppIcon name="download" size={18} />{t("exportConfig")}</Button>
+          <Button onClick={() => inputRef.current?.click()} disabled={busy}><AppIcon name="upload" size={18} />{t("importConfig")}</Button>
         </div>
         <input ref={inputRef} className="sr-only" type="file" accept=".littleapple,application/json,.json" onChange={(event) => event.target.files?.[0] && readImport(event.target.files[0])} />
       </SettingGroup>
       <SettingGroup title={t("reset")} description={t("resetBody")}>
-        <Button variant="danger" onClick={() => setResetOpen(true)}><RotateCcw size={18} />{t("reset")}</Button>
+        <Button variant="danger" onClick={() => setResetOpen(true)}><AppIcon name="reset" size={18} />{t("reset")}</Button>
       </SettingGroup>
       <Dialog open={Boolean(preview)} onOpenChange={(value) => !value && setPreview(null)} title={t("importPreview")} closeLabel={t("close")} modalDepth="nested" description={previewContent ? t("importSummary", { engines: previewContent.config.search.engines.length, links: previewContent.config.quickLinks.length }) : undefined}>
         {previewContent && (

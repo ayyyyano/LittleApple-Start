@@ -2,11 +2,11 @@
 
 import { createPortal } from "react-dom";
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
-import { X } from "react-feather";
+import { AppIcon } from "@/components/ui/AppIcon";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { Surface } from "@/components/ui/Surface";
-import type { SurfaceMode } from "@/types/config";
+import type { IconProvider, SurfaceMode } from "@/types/config";
 
 interface DialogProps {
   open: boolean;
@@ -19,7 +19,9 @@ interface DialogProps {
   fullScreenMobile?: boolean;
   showClose?: boolean;
   closeLabel?: string;
-  surfaceVariant?: SurfaceMode | "auto";
+  surfaceVariant?: SurfaceMode | "auto" | "glass" | "standard";
+  liquidRenderer?: boolean;
+  iconProvider?: IconProvider;
   modalDepth?: "root" | "nested";
   surfaceStyle?: CSSProperties;
 }
@@ -31,7 +33,7 @@ let nestedDialogLockCount = 0;
 export const DIALOG_EXIT_MS = 120;
 
 export function Dialog({
-  open, onOpenChange, title, description, children, headerStart, className, fullScreenMobile = false, showClose = true, closeLabel = "Close", surfaceVariant = "auto", modalDepth = "root",
+  open, onOpenChange, title, description, children, headerStart, className, fullScreenMobile = false, showClose = true, closeLabel = "Close", surfaceVariant = "auto", liquidRenderer = true, iconProvider, modalDepth = "root",
   surfaceStyle,
 }: DialogProps) {
   const titleId = useId();
@@ -117,7 +119,7 @@ export function Dialog({
         className={cn("dialog-surface", modalDepth === "nested" && "dialog-surface--nested")}
         variant={surfaceVariant}
         style={surfaceStyle}
-        liquidRenderer={!isMobile}
+        liquidRenderer={liquidRenderer && !isMobile}
       >
         <div
           ref={contentRef}
@@ -135,7 +137,7 @@ export function Dialog({
               {description && <p id={descriptionId}>{description}</p>}
               </div>
             </div>
-            {showClose && <Button variant="ghost" size="icon" aria-label={closeLabel} onClick={() => onOpenChangeRef.current(false)}><X size={20} /></Button>}
+            {showClose && <Button variant="ghost" size="icon" aria-label={closeLabel} onClick={() => onOpenChangeRef.current(false)}><AppIcon name="close" provider={iconProvider} size={20} /></Button>}
           </div>
           {children}
         </div>

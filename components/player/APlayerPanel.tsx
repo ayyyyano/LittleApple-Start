@@ -2,7 +2,7 @@
 
 import "aplayer/dist/APlayer.min.css";
 import { useEffect, useRef } from "react";
-import { ChevronDown } from "react-feather";
+import { AppIcon } from "@/components/ui/AppIcon";
 import { useApp } from "@/components/providers/AppProvider";
 import { Button } from "@/components/ui/Button";
 import { LIQUID_VISUAL_STYLE, Surface } from "@/components/ui/Surface";
@@ -38,7 +38,7 @@ export function APlayerPanel({ onCollapse }: { onCollapse: () => void }) {
   return (
     <>
       <Surface className="floating-player-visual" variant="auto" style={{ ...visualStyle, position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", pointerEvents: "none" }} />
-      <Button className="aplayer-collapse" variant="secondary" size="icon" aria-label={t("collapsePlayer")} onClick={onCollapse}><ChevronDown size={18} /></Button>
+      <Button className="aplayer-collapse" variant="secondary" size="icon" aria-label={t("collapsePlayer")} onClick={onCollapse}><AppIcon name="chevronDown" size={18} /></Button>
       <div ref={containerRef} className="aplayer-host" />
     </>
   );

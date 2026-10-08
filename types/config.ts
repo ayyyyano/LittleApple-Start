@@ -5,7 +5,10 @@ export type BackgroundFit = "fill" | "fit" | "stretch" | "tile" | "center";
 export type DateFormat = "numeric" | "long" | "iso";
 export type PaletteMode = "wallpaper" | "custom";
 export type ThemeStrength = "soft" | "standard" | "vivid";
-export type SurfaceMode = "minimal" | "glass" | "liquid";
+/** User-facing surface themes. `standard`/`glass` are accepted only while parsing legacy data. */
+export type SurfaceMode = "minimal" | "material" | "liquid";
+export type IconStyle = "auto" | "feather" | "material";
+export type IconProvider = "feather" | "material";
 export type QuickLinksDensity = "compact" | "standard" | "comfortable" | "advanced";
 export type WeatherProviderId = "open-meteo";
 export type APlayerPosition = "left" | "right";
@@ -32,6 +35,8 @@ export interface TopAction {
   title: string;
   url: string;
   icon?: string;
+  /** Optional provider for new actions; omitted legacy icons remain Feather icons. */
+  iconProvider?: IconProvider;
   openInNewTab: boolean;
 }
 
@@ -112,6 +117,7 @@ export interface AppConfig {
     paletteMode: PaletteMode;
     themeStrength: ThemeStrength;
     surfaceMode: SurfaceMode;
+    iconStyle: IconStyle;
     accentColor: string;
     wallpaperPalette: string[];
     overallScale: number;
