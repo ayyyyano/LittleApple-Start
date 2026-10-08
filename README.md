@@ -45,7 +45,7 @@
 
 1. 将仓库导入 [Vercel](https://vercel.com/)。
 2. Framework Preset 选择 Next.js，或使用自动识别结果。
-3. 构建配置保持默认 (Install Command 使用 `npm install`, Build Command 使用 `npm run build`)。
+3. 保持默认构建配置；Vercel 会根据 `pnpm-lock.yaml` 自动使用 pnpm 安装依赖并运行 `pnpm build`。如需严格使用 `packageManager` 固定的 pnpm 10.32.0，请在项目环境变量中启用 `ENABLE_EXPERIMENTAL_COREPACK=1`。
 4. 部署后打开分配的域名即可。
 
 ### 使用 Docker 手动部署
@@ -81,18 +81,19 @@ environment:
 > 推荐使用 Node.js 24。
 
 ```bash
-npm install
-npm run dev
+corepack enable
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
 ### 构建与质量检查：
 
 ```bash
-npm run typecheck
-npm run lint
-npm run test
-npm run build
-npm run start
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+pnpm start
 ```
 
 ## 设置项说明

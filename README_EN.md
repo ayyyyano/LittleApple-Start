@@ -45,7 +45,7 @@
 
 1. Import the repository into [Vercel](https://vercel.com/).
 2. Select Next.js as the Framework Preset, or use the automatically detected value.
-3. Keep the default build configuration (`npm install` as the Install Command and `npm run build` as the Build Command).
+3. Keep the default build configuration. Vercel detects pnpm from `pnpm-lock.yaml`, installs dependencies, and runs `pnpm build` automatically. To enforce pnpm 10.32.0 from `packageManager`, enable `ENABLE_EXPERIMENTAL_COREPACK=1` in the project environment variables.
 4. Open the assigned deployment URL after the deployment completes.
 
 ### Deploy Manually with Docker
@@ -81,18 +81,19 @@ Additional supported parameters are `LITTLEAPPLE_DEFAULT_ICP_TEXT`, `LITTLEAPPLE
 > Node.js 24 is recommended.
 
 ```bash
-npm install
-npm run dev
+corepack enable
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
 ### Build and Quality Checks
 
 ```bash
-npm run typecheck
-npm run lint
-npm run test
-npm run build
-npm run start
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+pnpm start
 ```
 
 ## Settings
