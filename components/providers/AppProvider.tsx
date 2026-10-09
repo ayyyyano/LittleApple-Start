@@ -228,9 +228,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       panelInner: 0.44 + userOpacity * 0.3,
     };
     const liquidProfile = {
-      control: 0.1 + userOpacity * 0.12,
-      controlHover: 0.15 + userOpacity * 0.12,
-      panel: 0.17 + userOpacity * 0.16,
+      control: 0.14 + userOpacity * 0.13,
+      controlHover: 0.19 + userOpacity * 0.13,
+      panel: 0.19 + userOpacity * 0.17,
       panelStrong: 0.24 + userOpacity * 0.16,
       panelInner: 0.08 + userOpacity * 0.08,
     };
@@ -308,21 +308,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--state-danger-hover-bg", "color-mix(in srgb, var(--danger) 14%, transparent)");
     root.style.setProperty("--peripheral-bg", "var(--surface-control)");
     root.style.setProperty("--peripheral-bg-hover", "var(--surface-control-hover)");
-    root.style.setProperty("--peripheral-bg-active", config.appearance.surfaceMode === "liquid" ? "color-mix(in srgb, var(--accent) 10%, transparent)" : "var(--state-active-bg)");
+    root.style.setProperty("--peripheral-bg-active", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-active)" : "var(--state-active-bg)");
     root.style.setProperty("--peripheral-fg", "var(--text)");
     root.style.setProperty("--peripheral-fg-muted", "var(--text-secondary)");
     root.style.setProperty("--peripheral-border", "var(--surface-border)");
     root.style.setProperty("--peripheral-border-hover", config.appearance.surfaceMode === "liquid" ? "var(--surface-border-strong)" : "var(--accent)");
     root.style.setProperty("--peripheral-shadow", "var(--surface-shadow)");
     root.style.setProperty("--peripheral-active-fg", "var(--accent-strong)");
-    root.style.setProperty("--peripheral-active-tint", config.appearance.surfaceMode === "liquid" ? "color-mix(in srgb, var(--accent) 12%, transparent)" : "var(--state-active-bg)");
+    root.style.setProperty("--peripheral-active-tint", config.appearance.surfaceMode === "liquid" ? "var(--liquid-state-selected)" : "var(--state-active-bg)");
     root.style.setProperty("--peripheral-focus-ring", "var(--focus)");
     root.style.setProperty("--primary-bg", isMaterial ? "var(--material-primary)" : "var(--accent)");
     root.style.setProperty("--primary-fg", isMaterial ? "var(--material-on-primary)" : "var(--on-accent)");
     root.style.setProperty("--liquid-state-hover", "var(--liquid-menu-hover)");
     root.style.setProperty("--liquid-state-selected", "var(--liquid-menu-selected)");
-    root.style.setProperty("--liquid-state-active", "color-mix(in srgb, var(--accent) 24%, transparent)");
-    root.style.setProperty("--liquid-state-fg", "var(--accent-strong)");
+    root.style.setProperty("--liquid-state-active", "color-mix(in srgb, var(--liquid-surface-selected) 44%, transparent)");
+    root.style.setProperty("--liquid-state-fg", "var(--liquid-on-surface)");
   }, [config.appearance.glassBlur, config.appearance.glassOpacity, config.appearance.surfaceMode]);
 
   const updateConfig = useCallback((updater: (current: AppConfig) => AppConfig) => {

@@ -2,7 +2,9 @@
 
 import { createPortal } from "react-dom";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useApp } from "@/components/providers/AppProvider";
 import { AppIcon } from "@/components/ui/AppIcon";
+import { LIQUID_VISUAL_STYLE } from "@/components/ui/Surface";
 import { cn } from "@/lib/utils";
 
 export interface SelectOption {
@@ -22,6 +24,7 @@ interface SelectProps {
 }
 
 export function Select({ id, value, options, onValueChange, className, ariaLabel, disabled = false }: SelectProps) {
+  const { config } = useApp();
   const generatedId = useId();
   const listId = `${id ?? generatedId}-listbox`;
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -34,6 +37,7 @@ export function Select({ id, value, options, onValueChange, className, ariaLabel
   const [placement, setPlacement] = useState({ left: 0, top: 0, width: 180, maxHeight: 280 });
   const selected = options[selectedIndex];
   const enabledIndices = useMemo(() => options.flatMap((option, index) => option.disabled ? [] : [index]), [options]);
+  const liquidVisualStyle = config.appearance.surfaceMode === "liquid" ? LIQUID_VISUAL_STYLE : undefined;
 
   useEffect(() => {
     if (open) {
@@ -121,6 +125,7 @@ export function Select({ id, value, options, onValueChange, className, ariaLabel
         aria-expanded={open}
         aria-activedescendant={open ? `${listId}-${activeIndex}` : undefined}
         disabled={disabled}
+        style={liquidVisualStyle}
         onClick={() => open ? setOpen(false) : openList()}
         onKeyDown={(event) => {
           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -141,7 +146,7 @@ export function Select({ id, value, options, onValueChange, className, ariaLabel
         <span>{selected?.label ?? "—"}</span><AppIcon name="chevronDown" size={16} />
       </button>
       {listMounted && typeof document !== "undefined" && createPortal(
-        <div ref={listRef} id={listId} className={cn("ui-select-list", listExiting && "ui-select-list--exiting")} role="listbox" aria-label={ariaLabel} aria-hidden={!open} style={{ left: placement.left, top: placement.top, width: placement.width, maxHeight: placement.maxHeight }}>
+        <div ref={listRef} id={listId} className={cn("ui-select-list", listExiting && "ui-select-list--exiting")} role="listbox" aria-label={ariaLabel} aria-hidden={!open} style={{ left: placement.left, top: placement.top, width: placement.width, maxHeight: placement.maxHeight, ...liquidVisualStyle }}>
           {options.map((option, index) => (
             <button
               key={option.value}

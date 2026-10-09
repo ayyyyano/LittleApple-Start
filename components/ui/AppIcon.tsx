@@ -6,11 +6,19 @@ import { resolveIconProvider, type SemanticIconName } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import type { IconProvider } from "@/types/config";
 
+const GripVertical: Icon = ({ color = "currentColor", size = 24, ...props }) => (
+  <svg {...props} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="5" r="1" /><circle cx="15" cy="5" r="1" />
+    <circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" />
+    <circle cx="9" cy="19" r="1" /><circle cx="15" cy="19" r="1" />
+  </svg>
+);
+
 const FEATHER: Record<SemanticIconName, Icon> = {
   settings: Settings, home: Home, search: Search, add: Plus, edit: Edit2, delete: Trash2, close: X, check: Check, menu: Menu,
   back: ArrowLeft, forward: ArrowRight, appearance: Sliders, content: Clock, data: Database, about: Info, clock: Clock, calendar: Calendar,
   weather: Activity, quote: Info, music: Music, audio: Music, play: Play, pause: Pause, link: Link2, externalLink: ExternalLink, upload: Upload, download: Download,
-  reset: RotateCcw, light: Activity, dark: Activity, system: Monitor, palette: Aperture, more: MoreHorizontal, drag: MoreHorizontal, info: Info, eye: Eye,
+  reset: RotateCcw, light: Activity, dark: Activity, system: Monitor, palette: Aperture, more: MoreHorizontal, drag: GripVertical, info: Info, eye: Eye,
   arrowUp: ArrowUp, arrowDown: ArrowDown, chevronDown: ChevronDown, chevronUp: ChevronUp, alert: AlertTriangle, refresh: RefreshCw, image: ImageIcon, video: Video,
 };
 

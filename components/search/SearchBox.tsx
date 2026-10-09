@@ -106,7 +106,7 @@ export function SearchBox() {
             }}
           />
           {suggestionsOpen && (
-            <div id={listId} className="search-suggestions" role="listbox">
+            <div id={listId} className="search-suggestions" role="listbox" style={visualStyle}>
               <button id={`${listId}-0`} type="button" role="option" aria-selected={activeIndex === 0} onClick={() => window.open(`https://fanyi.baidu.com/#auto/auto/${encodeURIComponent(query.trim())}`, "_blank", "noopener,noreferrer")}>
                 <span className="suggestion-badge">译</span>{t("translation")} “{query.trim()}”
               </button>
