@@ -1,28 +1,72 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export function getLinkIconSources(url: string, customIcon?: string): string[] {
-  void url;
-  return customIcon ? [customIcon] : [];
+import { deleteCachedSiteIcon, loadSiteIconBlob } from "@/lib/site-icon-cache";
+
+function normalizedPageUrl(value: string): string | null {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    url.hash = "";
+    return url.href;
+  } catch {
+    return null;
+  }
 }
 
 export function LinkIcon({ title, url, customIcon, size = 30 }: { title: string; url: string; customIcon?: string; size?: number }) {
-  return <LinkIconImage key={`${url}:${customIcon ?? ""}`} title={title} sources={getLinkIconSources(url, customIcon)} size={size} />;
+  return <LinkIconImage key={`${url}:${customIcon ?? ""}`} title={title} url={url} customIcon={customIcon} size={size} />;
 }
 
-function LinkIconImage({ title, sources, size }: { title: string; sources: string[]; size: number }) {
-  const [attempt, setAttempt] = useState(0);
+function LinkIconImage({ title, url, customIcon, size }: { title: string; url: string; customIcon?: string; size: number }) {
+  const pageUrl = normalizedPageUrl(url);
+  const [source, setSource] = useState<string | null>(customIcon ?? null);
   const [loaded, setLoaded] = useState(false);
-  const source = sources[attempt];
   const fallback = title.trim().charAt(0).toLocaleUpperCase();
-  if (!source) return <span className="link-icon-fallback" aria-hidden="true">{fallback}</span>;
+
+  useEffect(() => {
+    if (customIcon || !pageUrl) return;
+
+    let active = true;
+    let objectUrl: string | null = null;
+    void loadSiteIconBlob(pageUrl).then((blob) => {
+      if (!active || !blob) return;
+      objectUrl = URL.createObjectURL(blob);
+      setSource(objectUrl);
+    });
+
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [customIcon, pageUrl]);
+
+  if (!source) {
+    return <span className="link-icon-fallback" aria-hidden="true" title={title}>{fallback}</span>;
+  }
+
   return (
-    <span className="link-icon-stack" aria-hidden="true">
+    <span className="link-icon-stack" aria-hidden="true" title={title}>
       <span className="link-icon-fallback">{fallback}</span>
-      {/* Unknown user domains cannot be declared in Next Image remotePatterns; the fallback chain handles broken images. */}
+      {/* The same-origin route discovers and proxies only explicitly declared page icons. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className={loaded ? "is-loaded" : ""} src={source} alt="" width={size} height={size} onLoad={() => setLoaded(true)} onError={() => { setLoaded(false); setAttempt((value) => value + 1); }} />
+      <img
+        className={loaded ? "is-loaded" : ""}
+        src={source}
+        alt=""
+        width={size}
+        height={size}
+        decoding="async"
+        referrerPolicy="no-referrer"
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setLoaded(false);
+          if (!customIcon && pageUrl) void deleteCachedSiteIcon(pageUrl);
+          if (source.startsWith("blob:")) URL.revokeObjectURL(source);
+          setSource(null);
+        }}
+      />
     </span>
   );
 }
