@@ -7,6 +7,7 @@ import { SettingGroup } from "@/components/settings/SettingGroup";
 import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import { InstallAppSettings } from "@/components/pwa/InstallAppSettings";
 
 export function GeneralSettings() {
   const { config, updateConfig, t } = useApp();
@@ -21,6 +22,7 @@ export function GeneralSettings() {
           className="focus-mode-switch"
         />
       </SettingGroup>
+      <InstallAppSettings />
       <SettingGroup title={t("homepage")}>
         <Button onClick={() => setGuideOpen(true)}><AppIcon name="system" size={18} />{t("homepageGuide")}<AppIcon name="externalLink" size={15} /></Button>
       </SettingGroup>

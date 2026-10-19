@@ -15,6 +15,7 @@ interface DialogProps {
   description?: string;
   children: React.ReactNode;
   headerStart?: React.ReactNode;
+  headerContent?: React.ReactNode;
   className?: string;
   fullScreenMobile?: boolean;
   showClose?: boolean;
@@ -33,7 +34,7 @@ let nestedDialogLockCount = 0;
 export const DIALOG_EXIT_MS = 120;
 
 export function Dialog({
-  open, onOpenChange, title, description, children, headerStart, className, fullScreenMobile = false, showClose = true, closeLabel = "Close", surfaceVariant = "auto", liquidRenderer = true, iconProvider, modalDepth = "root",
+  open, onOpenChange, title, description, children, headerStart, headerContent, className, fullScreenMobile = false, showClose = true, closeLabel = "Close", surfaceVariant = "auto", liquidRenderer = true, iconProvider, modalDepth = "root",
   surfaceStyle,
 }: DialogProps) {
   const titleId = useId();
@@ -116,6 +117,7 @@ export function Dialog({
   return createPortal(
     <div className={cn("dialog-layer", modalDepth === "nested" && "dialog-layer--nested", !open && "dialog-layer--exiting")} data-modal-depth={modalDepth} aria-hidden={!open} role="presentation" onMouseDown={(event) => open && event.target === event.currentTarget && onOpenChangeRef.current(false)}>
       <Surface
+        large
         className={cn("dialog-surface", modalDepth === "nested" && "dialog-surface--nested")}
         variant={surfaceVariant}
         style={surfaceStyle}
@@ -133,7 +135,8 @@ export function Dialog({
             <div className={headerStart ? "dialog-header-leading" : undefined}>
               {headerStart}
               <div className={headerStart ? "dialog-header-title" : undefined}>
-              <h2 id={titleId}>{title}</h2>
+              <h2 id={titleId} className={headerContent ? "sr-only" : undefined}>{title}</h2>
+              {headerContent}
               {description && <p id={descriptionId}>{description}</p>}
               </div>
             </div>

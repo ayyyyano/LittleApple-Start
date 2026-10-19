@@ -7,49 +7,78 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { LIQUID_VISUAL_STYLE, Surface } from "@/components/ui/Surface";
 import { useApp } from "@/components/providers/AppProvider";
-import { generateSearchUrl } from "@/lib/search";
+import { generateSearchUrl, generateTranslationUrl } from "@/lib/search";
+import { fetchSearchSuggestions, suggestionsAllowed } from "@/lib/search-suggestions";
+import { useInlineTranslation } from "@/components/search/useInlineTranslation";
+import { MODEL_ERROR_MESSAGES } from "@/i18n/model-api";
 
 export function SearchBox() {
   const { config, updateConfig, t, notify } = useApp();
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [suggestionState, setSuggestionState] = useState({ key: "", items: [] as string[], loading: false });
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const listId = useId();
   const debounceRef = useRef<number | undefined>(undefined);
   const abortRef = useRef<AbortController | null>(null);
+  const searchRef = useRef<HTMLElement>(null);
+  const { state: translationState, translate, cancel: cancelTranslation } = useInlineTranslation(query, open);
 
   const engine = useMemo(
     () => config.search.engines.find((item) => item.id === config.search.defaultEngineId) ?? config.search.engines[0],
     [config.search.defaultEngineId, config.search.engines],
   );
 
+  const suggestionsEnabled = suggestionsAllowed(config.search.suggestionsEnabled, engine);
+  const suggestionKey = JSON.stringify([query.trim(), engine?.id, suggestionsEnabled, config.search.suggestionProvider, config.search.suggestionApiUrl, config.search.suggestionTransport, config.search.suggestionProxyUrl]);
+  const suggestions = suggestionsEnabled && suggestionState.key === suggestionKey ? suggestionState.items : [];
+  const loading = suggestionsEnabled && suggestionState.key === suggestionKey && suggestionState.loading;
+
   useEffect(() => {
     window.clearTimeout(debounceRef.current);
     abortRef.current?.abort();
     const trimmed = query.trim();
-    if (!trimmed || !config.search.suggestionsEnabled) {
-      return;
-    }
+    if (!open || !trimmed || !suggestionsEnabled) return;
     debounceRef.current = window.setTimeout(async () => {
       const controller = new AbortController();
       abortRef.current = controller;
-      setLoading(true);
-      setOpen(true);
+      setSuggestionState({ key: suggestionKey, items: [], loading: true });
       try {
-        const baiduUrl = `https://www.baidu.com/sugrec?prod=pc&wd=${encodeURIComponent(trimmed)}`;
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(baiduUrl)}`, { signal: controller.signal });
-        const data = await response.json() as { g?: Array<{ q?: string }> };
-        setSuggestions((data.g ?? []).flatMap((item) => typeof item.q === "string" ? [item.q] : []).slice(0, 7));
+        if (!engine) return;
+        const items = await fetchSearchSuggestions(config.search.suggestionProvider, config.search.suggestionApiUrl, trimmed, engine, controller.signal, config.search.suggestionTransport, config.search.suggestionProxyUrl);
+        if (!controller.signal.aborted) setSuggestionState({ key: suggestionKey, items, loading: false });
       } catch {
-        if (!controller.signal.aborted) setSuggestions([]);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) setSuggestionState({ key: suggestionKey, items: [], loading: false });
       }
     }, 320);
-    return () => window.clearTimeout(debounceRef.current);
-  }, [config.search.suggestionsEnabled, query]);
+    return () => {
+      window.clearTimeout(debounceRef.current);
+      abortRef.current?.abort();
+    };
+  }, [config.search.suggestionApiUrl, config.search.suggestionProvider, config.search.suggestionTransport, config.search.suggestionProxyUrl, suggestionsEnabled, engine, open, query, suggestionKey]);
+
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => {
+      if (!searchRef.current?.contains(event.target as Node)) { setOpen(false); cancelTranslation(); }
+    };
+    const blur = () => { setOpen(false); cancelTranslation(); };
+    document.addEventListener("pointerdown", outside);
+    window.addEventListener("blur", blur);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      window.removeEventListener("blur", blur);
+    };
+  }, [cancelTranslation, open]);
+
+  function closeCandidates() {
+    cancelTranslation();
+    window.clearTimeout(debounceRef.current);
+    abortRef.current?.abort();
+    setSuggestionState((current) => current.loading ? { ...current, loading: false } : current);
+    setOpen(false);
+    setActiveIndex(-1);
+  }
 
   function search(value = query) {
     const trimmed = value.trim();
@@ -57,18 +86,29 @@ export function SearchBox() {
     try {
       window.open(generateSearchUrl(engine.urlTemplate, trimmed), "_blank", "noopener,noreferrer");
       setQuery("");
-      setOpen(false);
+      closeCandidates();
     } catch {
       notify(t("invalidUrlError"), "danger");
     }
   }
 
-  const suggestionsOpen = open && Boolean(query.trim()) && config.search.suggestionsEnabled;
-  const options = query.trim() ? [`${t("translation")} “${query.trim()}”`, ...suggestions] : [];
+  const aiEnabled = config.labs.aiTranslation.enabled;
+  const translationUrl = query.trim() && config.search.translationEnabled
+    ? generateTranslationUrl(config.search.translationProvider, config.search.translationUrlTemplate, query)
+    : null;
+  const translationOffset = translationUrl ? 1 : 0;
+  const aiIndex = translationOffset;
+  const suggestionOffset = translationOffset + (aiEnabled ? 1 : 0);
+  const optionsCount = suggestionOffset + suggestions.length;
+  const suggestionsOpen = open && Boolean(query.trim()) && (suggestionsEnabled || Boolean(translationUrl) || aiEnabled);
   const visualStyle = config.appearance.surfaceMode === "liquid" ? LIQUID_VISUAL_STYLE : {};
 
   return (
-    <section className="search-surface" aria-label={t("search")}>
+    <section ref={searchRef} className="search-surface" aria-label={t("search")} onKeyDown={(event) => {
+      if (event.key === "Escape" && open) { event.preventDefault(); closeCandidates(); }
+    }} onBlur={(event) => {
+      if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) closeCandidates();
+    }}>
       <div className="search-row-surface">
         <Surface className="search-row-visual" variant="auto" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", borderRadius: "inherit", pointerEvents: "none", ...visualStyle }} />
         <form className="search-row" onSubmit={(event) => { event.preventDefault(); search(); }}>
@@ -85,39 +125,60 @@ export function SearchBox() {
             aria-autocomplete="list"
             aria-expanded={suggestionsOpen}
             aria-controls={listId}
-            aria-activedescendant={activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined}
+            aria-activedescendant={suggestionsOpen && activeIndex >= 0 && activeIndex < optionsCount ? `${listId}-${activeIndex}` : undefined}
             onChange={(event) => {
               const value = event.target.value;
               setQuery(value);
+              cancelTranslation();
               setActiveIndex(-1);
-              if (!value.trim()) { setSuggestions([]); setOpen(false); }
+              setOpen(Boolean(value.trim()));
             }}
             onFocus={() => query.trim() && setOpen(true)}
+            onClick={() => query.trim() && setOpen(true)}
             onKeyDown={(event) => {
-              if (!suggestionsOpen || options.length === 0) return;
-              if (event.key === "ArrowDown") { event.preventDefault(); setActiveIndex((value) => Math.min(options.length - 1, value + 1)); }
+              if (event.nativeEvent.isComposing) return;
+              if (event.key === "Escape" && open) { event.preventDefault(); closeCandidates(); return; }
+              if (event.key === "ArrowDown" && !open && query.trim()) { event.preventDefault(); setOpen(true); setActiveIndex(-1); return; }
+              if (!suggestionsOpen || optionsCount === 0) return;
+              if (event.key === "ArrowDown") { event.preventDefault(); setActiveIndex((value) => Math.min(optionsCount - 1, value + 1)); }
               if (event.key === "ArrowUp") { event.preventDefault(); setActiveIndex((value) => Math.max(0, value - 1)); }
-              if (event.key === "Escape") setOpen(false);
-              if (event.key === "Enter" && activeIndex >= 0) {
+              if (event.key === "Enter" && activeIndex >= 0 && activeIndex < optionsCount) {
                 event.preventDefault();
-                if (activeIndex === 0) window.open(`https://fanyi.baidu.com/#auto/auto/${encodeURIComponent(query.trim())}`, "_blank", "noopener,noreferrer");
-                else { setQuery(suggestions[activeIndex - 1] ?? query); setOpen(false); }
+                if (translationUrl && activeIndex === 0) window.open(translationUrl, "_blank", "noopener,noreferrer");
+                else if (aiEnabled && activeIndex === aiIndex) void translate();
+                else { setQuery(suggestions[activeIndex - suggestionOffset] ?? query); closeCandidates(); }
               }
             }}
           />
           {suggestionsOpen && (
-            <div id={listId} className="search-suggestions" role="listbox" style={visualStyle}>
-              <button id={`${listId}-0`} type="button" role="option" aria-selected={activeIndex === 0} onClick={() => window.open(`https://fanyi.baidu.com/#auto/auto/${encodeURIComponent(query.trim())}`, "_blank", "noopener,noreferrer")}>
+            <Surface large plain liquidRenderer={false} className="search-suggestions">
+              <div id={listId} role="listbox" aria-label={t("suggestions")}>
+              {translationUrl ? <button id={`${listId}-0`} type="button" role="option" aria-selected={activeIndex === 0} onMouseDown={(event) => event.preventDefault()} onClick={() => window.open(translationUrl, "_blank", "noopener,noreferrer")}>
                 <span className="suggestion-badge">译</span>{t("translation")} “{query.trim()}”
-              </button>
+              </button> : null}
+              {aiEnabled ? <button id={`${listId}-${aiIndex}`} type="button" role="option" aria-selected={activeIndex === aiIndex} onMouseDown={(event) => event.preventDefault()} onClick={() => { void translate(); }}>
+                <AppIcon name="quote" size={16} />{t("aiTranslateAction")}
+              </button> : null}
               {suggestions.map((suggestion, index) => (
-                <button id={`${listId}-${index + 1}`} key={suggestion} type="button" role="option" aria-selected={activeIndex === index + 1} onClick={() => { setQuery(suggestion); setOpen(false); }}>
+                <button id={`${listId}-${index + suggestionOffset}`} key={suggestion} type="button" role="option" aria-selected={activeIndex === index + suggestionOffset} onMouseDown={(event) => event.preventDefault()} onClick={() => { setQuery(suggestion); closeCandidates(); }}>
                   <AppIcon name="search" size={16} />{suggestion}
                 </button>
               ))}
+              </div>
               {loading && <div className="suggestions-state">{t("suggestionsLoading")}</div>}
-              {!loading && suggestions.length === 0 && <div className="suggestions-state">{t("suggestionsEmpty")}</div>}
-            </div>
+              {suggestionsEnabled && !loading && suggestions.length === 0 && <div className="suggestions-state">{t("suggestionsEmpty")}</div>}
+              <div className="ai-translation-state" role="status" aria-live="polite">
+                {translationState?.status === "loading" ? <p>{t("aiTranslating")}</p> : null}
+                {translationState?.error ? <p>{t(MODEL_ERROR_MESSAGES[translationState.error])}</p> : null}
+                {translationState?.status === "ready" && translationState.text ? <>
+                  <p className="ai-translation-text" aria-label={t("aiTranslationResult")}>{translationState.text}</p>
+                  <button type="button" onClick={async () => {
+                    try { await navigator.clipboard.writeText(translationState.text ?? ""); notify(t("translationCopied"), "success"); }
+                    catch { notify(t("translationCopyFailed"), "warning"); }
+                  }}>{t("copyTranslation")}</button>
+                </> : null}
+              </div>
+            </Surface>
           )}
         </div>
         <label className="sr-only" htmlFor="engine-select">{t("searchEngine")}</label>

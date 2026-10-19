@@ -37,7 +37,7 @@ export function APlayerPanel({ onCollapse }: { onCollapse: () => void }) {
 
   return (
     <>
-      <Surface className="floating-player-visual" variant="auto" style={{ ...visualStyle, position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", pointerEvents: "none" }} />
+      <Surface large className="floating-player-visual" variant="auto" style={{ ...visualStyle, position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", pointerEvents: "none" }} />
       <Button className="aplayer-collapse" variant="secondary" size="icon" aria-label={t("collapsePlayer")} onClick={onCollapse}><AppIcon name="chevronDown" size={18} /></Button>
       <div ref={containerRef} className="aplayer-host" />
     </>

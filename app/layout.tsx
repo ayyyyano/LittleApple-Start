@@ -5,6 +5,8 @@ export const metadata: Metadata = {
   title: "LittleApple Start",
   description: "一个以个人背景、色彩和视觉构图为核心的本地优先浏览器起始页。",
   applicationName: "LittleApple Start",
+  appleWebApp: { capable: true, title: "LittleApple Start", statusBarStyle: "default" },
+  icons: { apple: "/pwa/icon-180.png" },
 };
 
 export const viewport: Viewport = {

@@ -2,6 +2,7 @@ import { cloneDefaultConfig } from "@/lib/default-config";
 import { isLegacyExport, migrateLegacyConfig, migrateV2Config } from "@/lib/config-migrations";
 import { isHexColor, isSafeHttpUrl } from "@/lib/validation";
 import { isSafeDeploymentUrl } from "@/lib/deployment-defaults";
+import { parseModelProfiles } from "@/lib/model-api-config";
 import type {
   AppConfig,
   APlayerTrack,
@@ -43,13 +44,19 @@ function safeUrlOr(value: unknown, fallback: string): string {
   return trimmed === "" || isSafeHttpUrl(trimmed) ? trimmed.slice(0, 500) : fallback;
 }
 
+function optionalCoordinate(value: unknown, min: number, max: number): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max ? value : undefined;
+}
+
 function parseEngines(value: unknown): SearchEngine[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
     if (!isRecord(item)) return [];
     if (typeof item.id !== "string" || typeof item.name !== "string" || typeof item.urlTemplate !== "string") return [];
     if (!item.id || !item.name.trim() || !isSafeHttpUrl(item.urlTemplate)) return [];
-    return [{ id: item.id, name: item.name.trim(), urlTemplate: item.urlTemplate }];
+    return [{ id: item.id, name: item.name.trim(), urlTemplate: item.urlTemplate,
+      ...(typeof item.suggestionsEnabled === "boolean" ? { suggestionsEnabled: item.suggestionsEnabled } : {}),
+    }];
   });
 }
 
@@ -64,6 +71,7 @@ function parseQuickLinks(value: unknown): QuickLink[] {
       title: item.title.trim(),
       url: item.url,
       icon: typeof item.icon === "string" && isSafeHttpUrl(item.icon) ? item.icon : undefined,
+      iconAssetId: typeof item.iconAssetId === "string" && /^quick-link-icon:[A-Za-z0-9_-]+$/.test(item.iconAssetId) ? item.iconAssetId : undefined,
       category: typeof item.category === "string" ? item.category : undefined,
       openInNewTab: item.openInNewTab !== false,
     }];
@@ -152,6 +160,19 @@ export function parseCurrentConfig(value: unknown): AppConfig {
       ? search.defaultEngineId
       : engines[0].id;
     result.search.suggestionsEnabled = booleanOr(search.suggestionsEnabled, fallback.search.suggestionsEnabled);
+    if (["auto", "baidu", "bing", "google", "duckduckgo", "custom"].includes(String(search.suggestionProvider))) {
+      result.search.suggestionProvider = search.suggestionProvider as AppConfig["search"]["suggestionProvider"];
+    }
+    result.search.suggestionApiUrl = safeUrlOr(search.suggestionApiUrl, fallback.search.suggestionApiUrl);
+    if (["auto", "direct", "allorigins", "custom"].includes(String(search.suggestionTransport))) {
+      result.search.suggestionTransport = search.suggestionTransport as AppConfig["search"]["suggestionTransport"];
+    }
+    result.search.suggestionProxyUrl = safeUrlOr(search.suggestionProxyUrl, "");
+    result.search.translationEnabled = booleanOr(search.translationEnabled, fallback.search.translationEnabled);
+    if (["baidu", "google", "bing", "custom"].includes(String(search.translationProvider))) {
+      result.search.translationProvider = search.translationProvider as AppConfig["search"]["translationProvider"];
+    }
+    result.search.translationUrlTemplate = safeUrlOr(search.translationUrlTemplate, fallback.search.translationUrlTemplate);
   }
 
   result.quickLinks = parseQuickLinks(value.quickLinks);
@@ -236,30 +257,58 @@ export function parseCurrentConfig(value: unknown): AppConfig {
       result.content.weather.enabled = booleanOr(weather.enabled, fallback.content.weather.enabled);
       if (weather.provider === "open-meteo") result.content.weather.provider = weather.provider;
       if (typeof weather.location === "string" && weather.location.trim()) result.content.weather.location = weather.location.trim().slice(0, 80);
+      const latitude = optionalCoordinate(weather.latitude, -90, 90);
+      const longitude = optionalCoordinate(weather.longitude, -180, 180);
+      if (latitude !== undefined && longitude !== undefined) {
+        result.content.weather.latitude = latitude;
+        result.content.weather.longitude = longitude;
+      }
+      result.content.weather.autoLocate = booleanOr(weather.autoLocate, fallback.content.weather.autoLocate);
+      if (weather.temperatureUnit === "celsius" || weather.temperatureUnit === "fahrenheit") result.content.weather.temperatureUnit = weather.temperatureUnit;
       result.content.weather.showIcon = booleanOr(weather.showIcon, fallback.content.weather.showIcon);
       result.content.weather.showTemperature = booleanOr(weather.showTemperature, fallback.content.weather.showTemperature);
       result.content.weather.showCondition = booleanOr(weather.showCondition, fallback.content.weather.showCondition);
       result.content.weather.showLocation = booleanOr(weather.showLocation, fallback.content.weather.showLocation);
-      if (weather.refreshMinutes === 20 || weather.refreshMinutes === 30 || weather.refreshMinutes === 60) result.content.weather.refreshMinutes = weather.refreshMinutes;
+      if (weather.refreshMinutes === 0 || weather.refreshMinutes === 15 || weather.refreshMinutes === 20 || weather.refreshMinutes === 30 || weather.refreshMinutes === 60) result.content.weather.refreshMinutes = weather.refreshMinutes;
     }
   }
 
-  if (isRecord(value.labs) && isRecord(value.labs.aplayer)) {
-    const aplayer = value.labs.aplayer;
-    result.labs.aplayer.enabled = booleanOr(aplayer.enabled, fallback.labs.aplayer.enabled);
-    if (aplayer.position === "left" || aplayer.position === "right") result.labs.aplayer.position = aplayer.position;
-    if (aplayer.source === "manual" || aplayer.source === "meting") result.labs.aplayer.source = aplayer.source;
-    if (isRecord(aplayer.meting)) {
-      const meting = aplayer.meting;
-      result.labs.aplayer.meting.enabled = booleanOr(meting.enabled, fallback.labs.aplayer.meting.enabled);
-      result.labs.aplayer.meting.apiBaseUrl = safeUrlOr(meting.apiBaseUrl, fallback.labs.aplayer.meting.apiBaseUrl);
-      result.labs.aplayer.meting.server = stringOr(meting.server, fallback.labs.aplayer.meting.server, 40);
-      if (["song", "playlist", "album", "search", "artist"].includes(String(meting.mode))) {
-        result.labs.aplayer.meting.mode = meting.mode as MetingMatchMode;
-      }
-      result.labs.aplayer.meting.value = stringOr(meting.value, fallback.labs.aplayer.meting.value, 200);
+  if (isRecord(value.labs)) {
+    result.labs.liveBackdropBlur = booleanOr(value.labs.liveBackdropBlur, false);
+    if (isRecord(value.labs.modelApi)) {
+      result.labs.modelApi.enabled = booleanOr(value.labs.modelApi.enabled, false);
+      result.labs.modelApi.profiles = parseModelProfiles(value.labs.modelApi.profiles);
     }
-    result.labs.aplayer.playlist = parseAPlayerPlaylist(aplayer.playlist);
+    if (isRecord(value.labs.aiTranslation)) {
+      const translation = value.labs.aiTranslation;
+      result.labs.aiTranslation.enabled = booleanOr(translation.enabled, false);
+      result.labs.aiTranslation.profileId = typeof translation.profileId === "string" && result.labs.modelApi.profiles.some((profile) => profile.id === translation.profileId) ? translation.profileId : null;
+      if (translation.targetLanguage === "zh-CN" || translation.targetLanguage === "zh-TW" || translation.targetLanguage === "en") result.labs.aiTranslation.targetLanguage = translation.targetLanguage;
+    }
+    if (isRecord(value.labs.customCursor)) {
+      result.labs.customCursor.enabled = booleanOr(value.labs.customCursor.enabled, fallback.labs.customCursor.enabled);
+      result.labs.customCursor.assetId = value.labs.customCursor.assetId === "cursor" ? "cursor" : null;
+      result.labs.customCursor.size = typeof value.labs.customCursor.size === "number" ? numberIn(value.labs.customCursor.size, 32, 16, 128) : null;
+      result.labs.customCursor.hotspotX = numberIn(value.labs.customCursor.hotspotX, 0, 0, 127);
+      result.labs.customCursor.hotspotY = numberIn(value.labs.customCursor.hotspotY, 0, 0, 127);
+    }
+    if (isRecord(value.labs.aplayer)) {
+      const aplayer = value.labs.aplayer;
+      result.labs.aplayer.enabled = booleanOr(aplayer.enabled, fallback.labs.aplayer.enabled);
+      if (aplayer.position === "left" || aplayer.position === "right") result.labs.aplayer.position = aplayer.position;
+      if (aplayer.source === "manual" || aplayer.source === "meting") result.labs.aplayer.source = aplayer.source;
+      if (isRecord(aplayer.meting)) {
+        const meting = aplayer.meting;
+        result.labs.aplayer.meting.enabled = booleanOr(meting.enabled, fallback.labs.aplayer.meting.enabled);
+        result.labs.aplayer.meting.apiBaseUrl = safeUrlOr(meting.apiBaseUrl, fallback.labs.aplayer.meting.apiBaseUrl);
+        result.labs.aplayer.meting.server = stringOr(meting.server, fallback.labs.aplayer.meting.server, 40);
+        if (["song", "playlist", "album", "search", "artist"].includes(String(meting.mode))) {
+          result.labs.aplayer.meting.mode = meting.mode as MetingMatchMode;
+        }
+        result.labs.aplayer.meting.value = stringOr(meting.value, fallback.labs.aplayer.meting.value, 200);
+      }
+      result.labs.aplayer.playlist = parseAPlayerPlaylist(aplayer.playlist);
+    }
   }
 
   if (isRecord(value.general)) {
@@ -279,11 +328,21 @@ function parseAsset(value: unknown, allowedType: RegExp): SerializedBackgroundAs
 }
 
 function parseBackground(value: unknown) {
+  const quickLinkIcons: Record<string, SerializedBackgroundAsset> = {};
+  if (isRecord(value) && isRecord(value.quickLinkIcons)) {
+    Object.entries(value.quickLinkIcons).slice(0, 48).forEach(([id, asset]) => {
+      if (!/^quick-link-icon:[A-Za-z0-9_-]+$/.test(id)) return;
+      const parsed = parseAsset(asset, /^image\//);
+      if (parsed) quickLinkIcons[id] = parsed;
+    });
+  }
   return isRecord(value)
     ? {
       visual: parseAsset(value.visual, /^(image|video)\//),
       audio: parseAsset(value.audio, /^audio\//),
       avatar: parseAsset(value.avatar, /^image\//),
+      cursor: parseAsset(value.cursor, /^image\//),
+      quickLinkIcons,
     }
     : undefined;
 }

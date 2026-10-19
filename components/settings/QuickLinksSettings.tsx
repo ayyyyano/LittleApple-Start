@@ -10,12 +10,25 @@ import { Select } from "@/components/ui/Select";
 import { Slider } from "@/components/ui/Slider";
 import { moveItem } from "@/lib/utils";
 import type { QuickLink } from "@/types/config";
+import { deleteQuickLinkIcon } from "@/services/quick-link-icon-storage";
+import { refreshAutomaticSiteIcons } from "@/lib/site-icon-refresh";
 
 export function QuickLinksSettings() {
-  const { config, updateConfig, t } = useApp();
+  const { config, updateConfig, t, touchAssets, notify } = useApp();
+  const [refreshingIcons, setRefreshingIcons] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<QuickLink | undefined>();
   const style = config.appearance.quickLinksStyle;
+  async function refreshIcons(links: QuickLink[]) {
+    const automatic = links.filter((link) => !link.icon && !link.iconAssetId);
+    if (refreshingIcons || automatic.length === 0) return;
+    setRefreshingIcons(true);
+    try {
+      const { loaded, total } = await refreshAutomaticSiteIcons(automatic);
+      if (loaded > 0) touchAssets();
+      notify(t("iconsRefreshed", { loaded, total }), loaded === total ? "success" : "warning");
+    } finally { setRefreshingIcons(false); }
+  }
   function updateStyle(patch: Partial<typeof style>) {
     updateConfig((current) => ({ ...current, appearance: { ...current.appearance, quickLinksStyle: { ...current.appearance.quickLinksStyle, ...patch } } }));
   }
@@ -34,16 +47,21 @@ export function QuickLinksSettings() {
             <div className="settings-list-item" key={link.id}>
               <div><strong>{link.title}</strong><span>{link.url}</span></div>
               <div className="list-actions">
+                {!link.icon && !link.iconAssetId ? <Button variant="ghost" size="icon" aria-label={`${t("refreshSiteIcon")}: ${link.title}`} disabled={refreshingIcons} onClick={() => void refreshIcons([link])}><AppIcon name="refresh" size={16} /></Button> : null}
                 <Button variant="ghost" size="icon" aria-label={t("moveUp")} disabled={index === 0} onClick={() => updateConfig((current) => ({ ...current, quickLinks: moveItem(current.quickLinks, index, index - 1) }))}><AppIcon name="arrowUp" size={16} /></Button>
                 <Button variant="ghost" size="icon" aria-label={t("moveDown")} disabled={index === config.quickLinks.length - 1} onClick={() => updateConfig((current) => ({ ...current, quickLinks: moveItem(current.quickLinks, index, index + 1) }))}><AppIcon name="arrowDown" size={16} /></Button>
                 <Button variant="ghost" size="icon" aria-label={t("edit")} onClick={() => { setEditing(link); setOpen(true); }}><AppIcon name="edit" size={16} /></Button>
-                <Button variant="ghost" size="icon" aria-label={t("remove")} onClick={() => updateConfig((current) => ({ ...current, quickLinks: current.quickLinks.filter((item) => item.id !== link.id) }))}><AppIcon name="delete" size={16} /></Button>
+                <Button variant="ghost" size="icon" aria-label={t("remove")} onClick={() => {
+                  void deleteQuickLinkIcon(link.iconAssetId);
+                  updateConfig((current) => ({ ...current, quickLinks: current.quickLinks.filter((item) => item.id !== link.id) }));
+                }}><AppIcon name="delete" size={16} /></Button>
               </div>
             </div>
           ))}
         </div>
       )}
       <Button variant="primary" onClick={() => { setEditing(undefined); setOpen(true); }}><AppIcon name="add" size={18} />{t("addQuickLink")}</Button>
+      <Button disabled={refreshingIcons || !config.quickLinks.some((link) => !link.icon && !link.iconAssetId)} onClick={() => void refreshIcons(config.quickLinks)}><AppIcon name="refresh" size={18} />{t(refreshingIcons ? "refreshingSiteIcons" : "refreshAllSiteIcons")}</Button>
       <QuickLinkEditor open={open} onOpenChange={setOpen} editing={editing} modalDepth="nested" />
     </SettingGroup>
     <SettingGroup title={t("quickLinksLayout")}>

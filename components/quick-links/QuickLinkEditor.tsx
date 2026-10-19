@@ -1,10 +1,11 @@
 "use client";
 
-import { LinkEditor, type LinkDraft } from "@/components/links/LinkEditor";
+import { LinkEditor, type LinkDraft, type LinkIconUpdate } from "@/components/links/LinkEditor";
 import { useApp } from "@/components/providers/AppProvider";
 import { createId } from "@/lib/utils";
 import type { QuickLink } from "@/types/config";
 import type { IconProvider } from "@/types/config";
+import { deleteQuickLinkIcon, quickLinkIconAssetId, saveQuickLinkIcon } from "@/services/quick-link-icon-storage";
 
 interface QuickLinkEditorProps {
   open: boolean;
@@ -15,15 +16,25 @@ interface QuickLinkEditorProps {
 }
 
 export function QuickLinkEditor({ open, onOpenChange, editing, modalDepth = "root", dialogIconProvider }: QuickLinkEditorProps) {
-  const { config, updateConfig, t } = useApp();
-  function save(draft: LinkDraft) {
-    const next: QuickLink = { id: editing?.id ?? createId("link"), ...draft, category: editing?.category };
+  const { config, updateConfig, touchAssets, t } = useApp();
+  async function save(draft: LinkDraft, iconUpdate: LinkIconUpdate) {
+    const id = editing?.id ?? createId("link");
+    const localAssetId = quickLinkIconAssetId(id);
+    let iconAssetId = iconUpdate.keepExistingLocalIcon ? editing?.iconAssetId : undefined;
+    if (iconUpdate.file) {
+      await saveQuickLinkIcon(localAssetId, iconUpdate.file);
+      iconAssetId = localAssetId;
+    } else if (editing?.iconAssetId && !iconUpdate.keepExistingLocalIcon) {
+      await deleteQuickLinkIcon(editing.iconAssetId);
+    }
+    const next: QuickLink = { id, ...draft, iconAssetId, category: editing?.category };
     updateConfig((current) => ({
       ...current,
       quickLinks: editing
         ? current.quickLinks.map((item) => item.id === editing.id ? next : item)
         : [...current.quickLinks, next],
     }));
+    touchAssets();
   }
   return (
     <LinkEditor

@@ -84,6 +84,18 @@ describe("configuration parser", () => {
     expect(parsed.labs.aplayer.meting.mode).toBe("song");
   });
 
+  it("defaults and validates the experimental custom cursor configuration", () => {
+    const config = cloneDefaultConfig();
+    const legacy = parseCurrentConfig({ ...config, labs: { aplayer: config.labs.aplayer } });
+    expect(legacy.labs.customCursor).toEqual({ enabled: false, assetId: null, size: null, hotspotX: 0, hotspotY: 0 });
+
+    const parsed = parseCurrentConfig({
+      ...config,
+      labs: { ...config.labs, customCursor: { enabled: true, assetId: "cursor" } },
+    });
+    expect(parsed.labs.customCursor).toEqual({ enabled: true, assetId: "cursor", size: null, hotspotX: 0, hotspotY: 0 });
+  });
+
   it("parses legacy exports", () => {
     const parsed = parseConfigFile(JSON.stringify({
       config: { searchEngines: [{ name: "Bing", url: "https://www.bing.com/search?q=" }], selectedSearchEngine: "https://www.bing.com/search?q=" },
@@ -108,5 +120,58 @@ describe("configuration parser", () => {
     ] });
     expect(parsed.topActions[0].iconProvider).toBeUndefined();
     expect(parsed.topActions[1].iconProvider).toBe("material");
+  });
+
+  it("parses search, weather, and local quick-link icon extensions", () => {
+    const config = cloneDefaultConfig();
+    const parsed = parseCurrentConfig({
+      ...config,
+      search: {
+        ...config.search,
+        suggestionProvider: "custom",
+        suggestionApiUrl: "https://example.com/suggest?q={query}",
+        translationEnabled: false,
+        translationProvider: "google",
+      },
+      quickLinks: [{ id: "docs", title: "Docs", url: "https://example.com", iconAssetId: "quick-link-icon:link-123", openInNewTab: true }],
+      content: { ...config.content, weather: { ...config.content.weather, latitude: 24.48, longitude: 118.09, autoLocate: true, temperatureUnit: "fahrenheit", refreshMinutes: 0 } },
+    });
+    expect(parsed.search).toMatchObject({ suggestionProvider: "custom", translationEnabled: false, translationProvider: "google" });
+    expect(parsed.quickLinks[0].iconAssetId).toBe("quick-link-icon:link-123");
+    expect(parsed.content.weather).toMatchObject({ latitude: 24.48, longitude: 118.09, autoLocate: true, temperatureUnit: "fahrenheit", refreshMinutes: 0 });
+  });
+
+  it("keeps valid local quick-link icon assets in configuration exports", () => {
+    const config = cloneDefaultConfig();
+    config.quickLinks = [{ id: "docs", title: "Docs", url: "https://example.com", iconAssetId: "quick-link-icon:docs", openInNewTab: true }];
+    const parsed = parseConfigFile(JSON.stringify({
+      version: 4,
+      exportedAt: "2026-10-16T00:00:00.000Z",
+      config,
+      background: {
+        quickLinkIcons: {
+          "quick-link-icon:docs": { mimeType: "image/png", name: "docs.png", dataUrl: "data:image/png;base64,iVBORw0KGgo=" },
+          "quick-link-icon:unsafe/path": { mimeType: "image/png", name: "bad.png", dataUrl: "data:image/png;base64,iVBORw0KGgo=" },
+        },
+      },
+    }));
+
+    expect(parsed.background?.quickLinkIcons).toEqual({
+      "quick-link-icon:docs": { mimeType: "image/png", name: "docs.png", dataUrl: "data:image/png;base64,iVBORw0KGgo=" },
+    });
+  });
+
+  it("keeps a valid custom cursor asset in configuration exports", () => {
+    const config = cloneDefaultConfig();
+    config.labs.customCursor = { ...config.labs.customCursor, enabled: true, assetId: "cursor" };
+    const parsed = parseConfigFile(JSON.stringify({
+      version: 4,
+      exportedAt: "2026-10-16T00:00:00.000Z",
+      config,
+      background: {
+        cursor: { mimeType: "image/png", name: "cursor.png", dataUrl: "data:image/png;base64,iVBORw0KGgo=" },
+      },
+    }));
+    expect(parsed.background?.cursor?.name).toBe("cursor.png");
   });
 });

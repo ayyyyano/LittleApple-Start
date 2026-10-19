@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useApp } from "@/components/providers/AppProvider";
 import { AppIcon } from "@/components/ui/AppIcon";
-import { LIQUID_VISUAL_STYLE } from "@/components/ui/Surface";
+import { LIQUID_VISUAL_STYLE, Surface } from "@/components/ui/Surface";
 import { cn } from "@/lib/utils";
 
 export interface SelectOption {
@@ -97,13 +97,18 @@ export function Select({ id, value, options, onValueChange, className, ariaLabel
       if (!buttonRef.current?.contains(target) && !listRef.current?.contains(target)) setOpen(false);
     };
     const close = () => setOpen(false);
+    const onScroll = (event: Event) => {
+      // Scrolling a long option list must not dismiss that same list.
+      if (event.target instanceof Node && listRef.current?.contains(event.target)) return;
+      close();
+    };
     document.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("resize", close);
-    window.addEventListener("scroll", close, true);
+    window.addEventListener("scroll", onScroll, true);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("resize", close);
-      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("scroll", onScroll, true);
     };
   }, [open]);
 
@@ -146,7 +151,7 @@ export function Select({ id, value, options, onValueChange, className, ariaLabel
         <span>{selected?.label ?? "—"}</span><AppIcon name="chevronDown" size={16} />
       </button>
       {listMounted && typeof document !== "undefined" && createPortal(
-        <div ref={listRef} id={listId} className={cn("ui-select-list", listExiting && "ui-select-list--exiting")} role="listbox" aria-label={ariaLabel} aria-hidden={!open} style={{ left: placement.left, top: placement.top, width: placement.width, maxHeight: placement.maxHeight, ...liquidVisualStyle }}>
+        <Surface large plain liquidRenderer={false} elementRef={listRef} id={listId} className={cn("ui-select-list", listExiting && "ui-select-list--exiting")} role="listbox" ariaLabel={ariaLabel} ariaHidden={!open} style={{ left: placement.left, top: placement.top, width: placement.width, maxHeight: placement.maxHeight }}>
           {options.map((option, index) => (
             <button
               key={option.value}
@@ -163,7 +168,7 @@ export function Select({ id, value, options, onValueChange, className, ariaLabel
               <span>{option.label}</span>{option.value === value ? <AppIcon name="check" size={16} /> : null}
             </button>
           ))}
-        </div>,
+        </Surface>,
         document.body,
       )}
     </span>

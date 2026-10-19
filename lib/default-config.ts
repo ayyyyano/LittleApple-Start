@@ -17,6 +17,13 @@ export const DEFAULT_CONFIG: AppConfig = {
   search: {
     defaultEngineId: "bing",
     suggestionsEnabled: true,
+    suggestionProvider: "baidu",
+    suggestionApiUrl: "",
+    suggestionTransport: "auto",
+    suggestionProxyUrl: "",
+    translationEnabled: true,
+    translationProvider: "baidu",
+    translationUrlTemplate: "",
     engines: [
       { id: "bing", name: "Bing", urlTemplate: "https://www.bing.com/search?q=%s" },
       { id: "google", name: "Google", urlTemplate: "https://www.google.com/search?q=%s" },
@@ -75,6 +82,8 @@ export const DEFAULT_CONFIG: AppConfig = {
       enabled: false,
       provider: "open-meteo",
       location: "Xiamen",
+      autoLocate: false,
+      temperatureUnit: "celsius",
       showIcon: true,
       showTemperature: true,
       showCondition: true,
@@ -83,6 +92,16 @@ export const DEFAULT_CONFIG: AppConfig = {
     },
   },
   labs: {
+    liveBackdropBlur: false,
+    modelApi: { enabled: false, profiles: [] },
+    aiTranslation: { enabled: false, profileId: null, targetLanguage: "zh-CN" },
+    customCursor: {
+      enabled: false,
+      assetId: null,
+      size: null,
+      hotspotX: 0,
+      hotspotY: 0,
+    },
     aplayer: {
       enabled: false,
       position: "left",

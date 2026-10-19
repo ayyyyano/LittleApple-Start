@@ -11,6 +11,7 @@ import { createConfigExport, downloadConfig } from "@/services/configuration-tra
 import type { AppConfig } from "@/types/config";
 import { ToastViewport, type ToastItem } from "@/components/ui/Toast";
 import { SakuraEffect } from "@/components/effects/SakuraEffect";
+import { createModelCredentialStore } from "@/lib/model-credentials";
 
 interface AppContextValue {
   config: AppConfig;
@@ -19,6 +20,8 @@ interface AppContextValue {
   defaultConfig: AppConfig;
   refreshDeploymentDefaults: () => Promise<DeploymentDefaults>;
   assetRevision: number;
+  modelCredentials: ReturnType<typeof createModelCredentialStore>;
+  credentialRevision: number;
   updateConfig: (updater: (current: AppConfig) => AppConfig) => void;
   replaceConfig: (config: AppConfig) => void;
   touchAssets: () => void;
@@ -36,6 +39,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const statusAfterLoad = useRef<"migrated" | "recovered" | null>(null);
   const lastPersistedConfig = useRef<string | null>(null);
+  const [modelCredentials] = useState(createModelCredentialStore);
+  const [credentialRevision, setCredentialRevision] = useState(0);
 
   const notify = useCallback((message: string, tone: ToastItem["tone"] = "default") => {
     const id = crypto.randomUUID();
@@ -329,7 +334,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setConfig((current) => updater(current));
   }, []);
 
-  const replaceConfig = useCallback((next: AppConfig) => setConfig(next), []);
+  const replaceConfig = useCallback((next: AppConfig) => {
+    modelCredentials.clear();
+    setCredentialRevision((value) => value + 1);
+    setConfig(next);
+  }, [modelCredentials]);
   const touchAssets = useCallback(() => setAssetRevision((value) => value + 1), []);
   const t = useCallback((key: MessageKey, values?: Record<string, string | number>) => translate(config.locale, key, values), [config.locale]);
 
@@ -340,12 +349,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     defaultConfig: applyDeploymentDefaults(cloneDefaultConfig(), deploymentDefaults),
     refreshDeploymentDefaults,
     assetRevision,
+    modelCredentials,
+    credentialRevision,
     updateConfig,
     replaceConfig,
     touchAssets,
     t,
     notify,
-  }), [assetRevision, config, deploymentDefaults, notify, ready, refreshDeploymentDefaults, replaceConfig, t, touchAssets, updateConfig]);
+  }), [assetRevision, config, credentialRevision, deploymentDefaults, modelCredentials, notify, ready, refreshDeploymentDefaults, replaceConfig, t, touchAssets, updateConfig]);
 
   return (
     <AppContext.Provider value={value}>

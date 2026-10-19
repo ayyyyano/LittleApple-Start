@@ -11,14 +11,30 @@ export type IconStyle = "auto" | "feather" | "material";
 export type IconProvider = "feather" | "material";
 export type QuickLinksDensity = "compact" | "standard" | "comfortable" | "advanced";
 export type WeatherProviderId = "open-meteo";
+export type WeatherTemperatureUnit = "celsius" | "fahrenheit";
+export type WeatherRefreshMinutes = 0 | 15 | 20 | 30 | 60;
+export type SuggestionProvider = "auto" | "baidu" | "bing" | "google" | "duckduckgo" | "custom";
+export type SuggestionTransport = "auto" | "direct" | "allorigins" | "custom";
+export type TranslationProvider = "baidu" | "google" | "bing" | "custom";
 export type APlayerPosition = "left" | "right";
 export type MusicSourceMode = "manual" | "meting";
 export type MetingMatchMode = "song" | "playlist" | "album" | "search" | "artist";
+export type TranslationLanguage = "zh-CN" | "zh-TW" | "en";
+
+/** Public connection metadata only. Credentials never belong to AppConfig. */
+export interface ModelApiProfile {
+  id: string;
+  name: string;
+  baseUrl: string;
+  model: string;
+  requiresApiKey: boolean;
+}
 
 export interface SearchEngine {
   id: string;
   name: string;
   urlTemplate: string;
+  suggestionsEnabled?: boolean;
 }
 
 export interface QuickLink {
@@ -26,6 +42,7 @@ export interface QuickLink {
   title: string;
   url: string;
   icon?: string;
+  iconAssetId?: string;
   openInNewTab: boolean;
   category?: string;
 }
@@ -44,11 +61,15 @@ export interface WeatherConfig {
   enabled: boolean;
   provider: WeatherProviderId;
   location: string;
+  latitude?: number;
+  longitude?: number;
+  autoLocate: boolean;
+  temperatureUnit: WeatherTemperatureUnit;
   showIcon: boolean;
   showTemperature: boolean;
   showCondition: boolean;
   showLocation: boolean;
-  refreshMinutes: 20 | 30 | 60;
+  refreshMinutes: WeatherRefreshMinutes;
 }
 
 export interface APlayerTrack {
@@ -95,6 +116,13 @@ export interface AppConfig {
     defaultEngineId: string;
     engines: SearchEngine[];
     suggestionsEnabled: boolean;
+    suggestionProvider: SuggestionProvider;
+    suggestionApiUrl: string;
+    suggestionTransport: SuggestionTransport;
+    suggestionProxyUrl: string;
+    translationEnabled: boolean;
+    translationProvider: TranslationProvider;
+    translationUrlTemplate: string;
   };
   quickLinks: QuickLink[];
   topActions: TopAction[];
@@ -163,6 +191,23 @@ export interface AppConfig {
     weather: WeatherConfig;
   };
   labs: {
+    liveBackdropBlur: boolean;
+    modelApi: {
+      enabled: boolean;
+      profiles: ModelApiProfile[];
+    };
+    aiTranslation: {
+      enabled: boolean;
+      profileId: string | null;
+      targetLanguage: TranslationLanguage;
+    };
+    customCursor: {
+      enabled: boolean;
+      assetId: "cursor" | null;
+      size: number | null;
+      hotspotX: number;
+      hotspotY: number;
+    };
     aplayer: {
       enabled: boolean;
       position: APlayerPosition;
@@ -180,7 +225,7 @@ export interface AppConfig {
 }
 
 export interface StoredBackgroundAsset {
-  id: "visual" | "audio" | "avatar";
+  id: "visual" | "audio" | "avatar" | "cursor" | `quick-link-icon:${string}`;
   blob: Blob;
   mimeType: string;
   name: string;
@@ -201,5 +246,7 @@ export interface ConfigExportV4 {
     visual?: SerializedBackgroundAsset;
     audio?: SerializedBackgroundAsset;
     avatar?: SerializedBackgroundAsset;
+    cursor?: SerializedBackgroundAsset;
+    quickLinkIcons?: Record<string, SerializedBackgroundAsset>;
   };
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { Component, lazy, Suspense, type CSSProperties, type ReactNode } from "react";
+import { Component, lazy, Suspense, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { LargeLiquidSurface } from "@/components/ui/LargeLiquidSurface";
 import { useApp } from "@/components/providers/AppProvider";
 import { canUseLiquidRenderer } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,10 @@ interface SurfaceProps {
   ariaLabel?: string;
   style?: CSSProperties;
   liquidRenderer?: boolean;
+  large?: boolean;
+  plain?: boolean;
+  ariaHidden?: boolean;
+  elementRef?: RefObject<HTMLDivElement | null>;
 }
 
 export const LIQUID_VISUAL_STYLE: Pick<CSSProperties, "backdropFilter" | "WebkitBackdropFilter"> = {
@@ -36,15 +41,17 @@ class LiquidBoundary extends Component<BoundaryProps, { failed: boolean }> {
   render() { return this.state.failed ? this.props.fallback : this.props.children; }
 }
 
-export function Surface({ children, className, variant = "auto", as: Tag = "div", id, role, ariaLabel, style, liquidRenderer = true }: SurfaceProps) {
+export function Surface({ children, className, variant = "auto", as: Tag = "div", id, role, ariaLabel, ariaHidden, style, liquidRenderer = true, large = false, plain = false, elementRef }: SurfaceProps) {
   const { config } = useApp();
   const requestedMode = variant === "auto" ? config.appearance.surfaceMode : variant;
   const mode: SurfaceMode = requestedMode === "glass" || requestedMode === "standard" ? "material" : requestedMode;
+  if (mode === "liquid" && large) return <LargeLiquidSurface as={Tag} id={id} role={role} ariaLabel={ariaLabel} ariaHidden={ariaHidden} className={className} style={style} elementRef={elementRef}>{children}</LargeLiquidSurface>;
+  if (plain && mode !== "liquid") return <Tag ref={elementRef} id={id} role={role} aria-label={ariaLabel} aria-hidden={ariaHidden} className={className} style={style}>{children}</Tag>;
   const useTrueLiquid = canUseLiquidRenderer(mode, mode === "liquid", liquidRenderer);
   const fallbackStyle = mode === "liquid" && !useTrueLiquid
     ? { ...LIQUID_VISUAL_STYLE, ...style }
     : style;
-  const fallback = <Tag id={id} role={role} aria-label={ariaLabel} style={fallbackStyle} className={cn("surface", `surface--${mode}`, className)}>{children}</Tag>;
+  const fallback = <Tag ref={elementRef} id={id} role={role} aria-label={ariaLabel} aria-hidden={ariaHidden} style={fallbackStyle} className={cn("surface", `surface--${mode}`, className)}>{children}</Tag>;
 
   if (!useTrueLiquid) return fallback;
 
@@ -53,6 +60,8 @@ export function Surface({ children, className, variant = "auto", as: Tag = "div"
   // styles are owned by the stable shell instead.
   const rendererStyle: CSSProperties = {
     ...style,
+    display: "block",
+    borderRadius: "inherit",
     background: "transparent",
     backgroundColor: "transparent",
     border: "0",

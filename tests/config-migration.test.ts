@@ -14,12 +14,17 @@ describe("legacy configuration migration", () => {
       autoSaveConfig: true,
       minimized: true,
       showMinimizeWarning: false,
+      enableSuggestions: false,
+      suggestProvider: "duckduckgo",
+      enableTranslationSuggest: false,
+      translateProvider: "google",
     });
 
     expect(migrated.version).toBe(4);
     expect(migrated.locale).toBe("zh-TW");
     expect(migrated.search.engines[0].urlTemplate).toBe("https://example.com/search?q=");
     expect(migrated.search.defaultEngineId).toBe(migrated.search.engines[0].id);
+    expect(migrated.search).toMatchObject({ suggestionsEnabled: false, suggestionProvider: "duckduckgo", translationEnabled: false, translationProvider: "google" });
     expect(migrated.clock).toMatchObject({ timezone: "Europe/London", useLocalTime: true, showNetworkWarning: false });
     expect(migrated.appearance.playBackgroundAudio).toBe(true);
     expect(migrated.appearance).toMatchObject({ backgroundFit: "fill", themeStrength: "standard", surfaceMode: "liquid" });

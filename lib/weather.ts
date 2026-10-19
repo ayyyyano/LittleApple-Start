@@ -3,7 +3,7 @@ import type { NormalizedWeather, WeatherCondition } from "@/types/weather";
 
 interface WeatherProvider {
   id: WeatherProviderId;
-  fetchCurrent: (location: string, locale: Locale, signal: AbortSignal) => Promise<NormalizedWeather>;
+  fetchCurrent: (config: WeatherConfig, locale: Locale, signal: AbortSignal) => Promise<NormalizedWeather>;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -26,24 +26,33 @@ function iconForCondition(condition: WeatherCondition): string {
   return { clear: "☀", partlyCloudy: "⛅", cloudy: "☁", fog: "≋", drizzle: "🌦", rain: "🌧", snow: "❄", storm: "⛈" }[condition];
 }
 
-async function fetchOpenMeteo(location: string, locale: Locale, signal: AbortSignal): Promise<NormalizedWeather> {
+async function fetchOpenMeteo(config: WeatherConfig, locale: Locale, signal: AbortSignal): Promise<NormalizedWeather> {
   const language = locale === "en" ? "en" : "zh";
-  const geocodingUrl = new URL("https://geocoding-api.open-meteo.com/v1/search");
-  geocodingUrl.searchParams.set("name", location);
-  geocodingUrl.searchParams.set("count", "1");
-  geocodingUrl.searchParams.set("language", language);
-  geocodingUrl.searchParams.set("format", "json");
-  const geocodingResponse = await fetch(geocodingUrl, { signal, cache: "no-store" });
-  if (!geocodingResponse.ok) throw new Error("WEATHER_LOCATION_FAILED");
-  const geocoding = await geocodingResponse.json() as unknown;
-  const first = isRecord(geocoding) && Array.isArray(geocoding.results) && isRecord(geocoding.results[0]) ? geocoding.results[0] : null;
-  if (!first || typeof first.latitude !== "number" || typeof first.longitude !== "number" || typeof first.name !== "string") throw new Error("WEATHER_LOCATION_MISSING");
+  let latitude = config.latitude;
+  let longitude = config.longitude;
+  let locationName = config.location.trim();
+  if (latitude === undefined || longitude === undefined) {
+    const geocodingUrl = new URL("https://geocoding-api.open-meteo.com/v1/search");
+    geocodingUrl.searchParams.set("name", locationName);
+    geocodingUrl.searchParams.set("count", "1");
+    geocodingUrl.searchParams.set("language", language);
+    geocodingUrl.searchParams.set("format", "json");
+    const geocodingResponse = await fetch(geocodingUrl, { signal, cache: "no-store" });
+    if (!geocodingResponse.ok) throw new Error("WEATHER_LOCATION_FAILED");
+    const geocoding = await geocodingResponse.json() as unknown;
+    const first = isRecord(geocoding) && Array.isArray(geocoding.results) && isRecord(geocoding.results[0]) ? geocoding.results[0] : null;
+    if (!first || typeof first.latitude !== "number" || typeof first.longitude !== "number" || typeof first.name !== "string") throw new Error("WEATHER_LOCATION_MISSING");
+    latitude = first.latitude;
+    longitude = first.longitude;
+    locationName = first.name;
+  }
 
   const forecastUrl = new URL("https://api.open-meteo.com/v1/forecast");
-  forecastUrl.searchParams.set("latitude", String(first.latitude));
-  forecastUrl.searchParams.set("longitude", String(first.longitude));
+  forecastUrl.searchParams.set("latitude", String(latitude));
+  forecastUrl.searchParams.set("longitude", String(longitude));
   forecastUrl.searchParams.set("current", "temperature_2m,weather_code");
   forecastUrl.searchParams.set("timezone", "auto");
+  forecastUrl.searchParams.set("temperature_unit", config.temperatureUnit);
   const forecastResponse = await fetch(forecastUrl, { signal, cache: "no-store" });
   if (!forecastResponse.ok) throw new Error("WEATHER_REQUEST_FAILED");
   const forecast = await forecastResponse.json() as unknown;
@@ -55,7 +64,7 @@ async function fetchOpenMeteo(location: string, locale: Locale, signal: AbortSig
     condition,
     icon: iconForCondition(condition),
     code: current.weather_code,
-    location: first.name,
+    location: locationName,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -65,9 +74,12 @@ export const WEATHER_PROVIDERS: Record<WeatherProviderId, WeatherProvider> = {
 };
 
 export function weatherCacheKey(config: WeatherConfig): string {
-  return `${config.provider}:${config.location.trim().toLocaleLowerCase()}`;
+  const location = config.latitude !== undefined && config.longitude !== undefined
+    ? `${config.latitude.toFixed(4)},${config.longitude.toFixed(4)}`
+    : config.location.trim().toLocaleLowerCase();
+  return `${config.provider}:${location}:${config.temperatureUnit}`;
 }
 
 export function fetchWeather(config: WeatherConfig, locale: Locale, signal: AbortSignal): Promise<NormalizedWeather> {
-  return WEATHER_PROVIDERS[config.provider].fetchCurrent(config.location.trim(), locale, signal);
+  return WEATHER_PROVIDERS[config.provider].fetchCurrent(config, locale, signal);
 }

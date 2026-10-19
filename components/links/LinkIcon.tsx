@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import { useApp } from "@/components/providers/AppProvider";
 import { deleteCachedSiteIcon, loadSiteIconBlob } from "@/lib/site-icon-cache";
+import { getQuickLinkIcon } from "@/services/quick-link-icon-storage";
 
 function normalizedPageUrl(value: string): string | null {
   try {
@@ -15,22 +17,24 @@ function normalizedPageUrl(value: string): string | null {
   }
 }
 
-export function LinkIcon({ title, url, customIcon, size = 30 }: { title: string; url: string; customIcon?: string; size?: number }) {
-  return <LinkIconImage key={`${url}:${customIcon ?? ""}`} title={title} url={url} customIcon={customIcon} size={size} />;
+export function LinkIcon({ title, url, customIcon, iconAssetId, size = 30 }: { title: string; url: string; customIcon?: string; iconAssetId?: string; size?: number }) {
+  const { assetRevision } = useApp();
+  return <LinkIconImage key={`${url}:${customIcon ?? ""}:${iconAssetId ?? ""}:${assetRevision}`} title={title} url={url} customIcon={customIcon} iconAssetId={iconAssetId} size={size} />;
 }
 
-function LinkIconImage({ title, url, customIcon, size }: { title: string; url: string; customIcon?: string; size: number }) {
+function LinkIconImage({ title, url, customIcon, iconAssetId, size }: { title: string; url: string; customIcon?: string; iconAssetId?: string; size: number }) {
   const pageUrl = normalizedPageUrl(url);
   const [source, setSource] = useState<string | null>(customIcon ?? null);
   const [loaded, setLoaded] = useState(false);
   const fallback = title.trim().charAt(0).toLocaleUpperCase();
 
   useEffect(() => {
-    if (customIcon || !pageUrl) return;
+    if (customIcon) return;
 
     let active = true;
     let objectUrl: string | null = null;
-    void loadSiteIconBlob(pageUrl).then((blob) => {
+    const load = iconAssetId ? getQuickLinkIcon(iconAssetId) : pageUrl ? loadSiteIconBlob(pageUrl) : Promise.resolve(null);
+    void load.then((blob) => {
       if (!active || !blob) return;
       objectUrl = URL.createObjectURL(blob);
       setSource(objectUrl);
@@ -40,7 +44,7 @@ function LinkIconImage({ title, url, customIcon, size }: { title: string; url: s
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [customIcon, pageUrl]);
+  }, [customIcon, iconAssetId, pageUrl]);
 
   if (!source) {
     return <span className="link-icon-fallback" aria-hidden="true" title={title}>{fallback}</span>;
@@ -62,7 +66,7 @@ function LinkIconImage({ title, url, customIcon, size }: { title: string; url: s
         onLoad={() => setLoaded(true)}
         onError={() => {
           setLoaded(false);
-          if (!customIcon && pageUrl) void deleteCachedSiteIcon(pageUrl);
+          if (!customIcon && !iconAssetId && pageUrl) void deleteCachedSiteIcon(pageUrl);
           if (source.startsWith("blob:")) URL.revokeObjectURL(source);
           setSource(null);
         }}

@@ -20,6 +20,7 @@ import { QuickLinkEditor } from "@/components/quick-links/QuickLinkEditor";
 import { LinkIcon } from "@/components/links/LinkIcon";
 import { isSafeHttpUrl } from "@/lib/validation";
 import type { QuickLink } from "@/types/config";
+import { deleteQuickLinkIcon } from "@/services/quick-link-icon-storage";
 
 function SortableQuickLink({
   link,
@@ -84,7 +85,7 @@ function SortableQuickLink({
         <button className="drag-handle" type="button" aria-label={`${draggingLabel}: ${link.title}`} {...attributes} {...listeners}><AppIcon name="drag" size={16} /></button>
         <a href={isSafeHttpUrl(link.url) ? link.url : "#"} target={link.openInNewTab ? "_blank" : undefined} rel={link.openInNewTab ? "noopener noreferrer" : undefined}>
           <span className="quick-link-icon">
-            <LinkIcon title={link.title} url={link.url} customIcon={link.icon} />
+            <LinkIcon title={link.title} url={link.url} customIcon={link.icon} iconAssetId={link.iconAssetId} />
           </span>
           <span className="quick-link-title">{link.title}</span>
         </a>
@@ -155,7 +156,10 @@ export function QuickLinksGrid() {
                   actionsOpen={openActionsId === link.id}
                   onActionsOpenChange={(open) => setOpenActionsId(open ? link.id : null)}
                   onEdit={() => { setEditing(link); setEditorOpen(true); }}
-                  onDelete={() => updateConfig((current) => ({ ...current, quickLinks: current.quickLinks.filter((item) => item.id !== link.id) }))}
+                  onDelete={() => {
+                    void deleteQuickLinkIcon(link.iconAssetId);
+                    updateConfig((current) => ({ ...current, quickLinks: current.quickLinks.filter((item) => item.id !== link.id) }));
+                  }}
                 />
               ))}
               <button className="quick-link quick-link--add" type="button" onClick={() => { setOpenActionsId(null); setEditing(undefined); setEditorOpen(true); }}>

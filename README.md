@@ -2,9 +2,9 @@
 
 > 新标签页，现在由你掌控。
 
-[DEMO](https://start.nekro.top/) | [English](README_EN.md)
+[DEMO](https://start.nekro.top/) | [ENG](README_EN.md)
 
-**LittleApple Start Community Edition** 是基于 [小苹果起始页 4.8](https://www.littleapple.top/startweb.html) 改进的浏览器起始页。项目遵循本地配置优先（Local-first）的原则，主打高度自由的视觉定制与界面构图，适合用作浏览器首页或新标签页。
+LittleApple Start Community Edition 是基于 [小苹果起始页](https://www.littleapple.top/startweb.html) 改进的浏览器起始页。你可以调整背景、主题和首页布局，配置与上传资源保存在当前浏览器中。
 
 ## 界面预览
 
@@ -20,26 +20,39 @@
  * 界面材质与主题：内置浅色/深色模式（支持跟随系统切换），提供 Simple（内容优先）、Material（色彩优先）及 Liquid Glass（环境优先，默认）三种主题。
  * 灵活布局：支持调整整体/模块比例、间距以及界面元素的位置构图。
 
+Material 使用 M3-inspired 色彩角色和色调容器。Liquid Glass 在搜索等少量焦点组件上使用折射渲染，快捷链接和设置主体使用 CSS 材质。图标可选自动、Feather 或 Material Symbols；自动模式下，固定界面图标在 Material 中使用 Material Symbols，在 Simple 和 Liquid Glass 中使用 Feather。自定义 Top Action 使用其保存的图标提供者。
+
 ### 功能模块
 
  * 时钟与日期：支持多时区、12/24小时制、秒数显示及多种日期格式。
- * 搜索与聚合：内置搜索引擎管理、自定义默认搜索引擎及联想词补全。
- * 快捷链接与操作：支持自定义 Quick Links（带图标排序与首字母降级兜底）和顶部固定操作入口（Top Actions）。
- * 专注模式：一键隐藏界面多余元素，纯享背景视觉。
- * 一言与天气：默认集成 Hitokoto API（带离线兜底），可选集成 Open-Meteo 天气预报。
+ * 搜索与翻译：管理搜索引擎，选择或自定义搜索建议接口及代理，按引擎开关联想词。外部翻译入口支持百度、Google、Bing 和自定义链接。
+ * 快捷链接与操作：Quick Links 支持拖动排序、本地图标上传和自动获取网页声明的图标。没有可用图标时显示站名首字母，成功获取后缓存到本地。Top Actions 可设置链接及图标提供者。
+ * 专注模式：一键隐藏首页模块，查看背景。
+ * 一言与天气：默认使用 Hitokoto，失败时显示缓存或预设文字；天气使用 Open-Meteo，支持城市输入、浏览器定位、温度单位、显示项和刷新间隔。
  * 音乐播放：支持独立背景音频（本地存储）以及 APlayer 播放器（支持网络音频、封面及 LRC 歌词）。APlayer 可选使用实验性的 Meting 集成，按歌曲、播放列表、专辑、搜索或艺术家解析曲目。
  * 页脚设置：支持自定义版权文本及 ICP/公安备案信息显示。
+ * 设置搜索：在设置顶栏搜索各分区的设置项。
+ * 应用安装：支持 PWA 安装入口和断网提示页，安装方式取决于浏览器。
+
+### 实验功能
+
+ * 自定义鼠标指针：桌面端可上传图片，调整大小和热点位置；移动设备不可开启。
+ * 背景声音：上传本地音频并控制播放，设置入口位于“实验”。
+ * Model API：管理多个 OpenAI-compatible Chat Completions 连接，手动指定接口和模型，主动测试连接。
+ * AI 翻译：选择模型后，在搜索候选框中主动翻译当前输入并复制译文。支持简体中文、繁体中文和英文目标语言，外部翻译入口仍可使用。
+
+Model API 与 AI 翻译默认关闭，连接测试和翻译可能产生费用。API Key 仅保留在当前会话内存，刷新后需重新输入，导出文件不含密钥。浏览器将请求直接发送到所选接口，受该接口的 CORS 限制。远程接口需要 HTTPS，localhost/loopback 开发接口允许 HTTP。
 
 ## 技术栈
 
  * 框架与语言：Next.js 16 (App Router) / React 19 / TypeScript
- * 样式与 UI：Tailwind CSS 4 + CSS Variables / Feather Icons / 本地 Material Symbols 语义图标 / liquid-glass
+ * 样式与 UI：Tailwind CSS 4 + CSS Variables / Feather Icons / 本地 Material Symbols SVG / liquid-glass
  * 交互与存储：dnd-kit / IndexedDB + LocalStorage / APlayer
  * 测试与规范：Vitest / ESLint
 
 ## 部署
 
-> 本项目无需服务端数据库。可选的部署运行时环境变量只用于新用户默认值与重置；用户配置及媒体文件仍直接存储在浏览器中。
+项目无需服务端数据库。部署运行时环境变量可设置站点默认值与 favicon，用户配置和上传资源保存在浏览器中。
 
 ### 使用 Vercel 部署 (推荐)
 
@@ -59,9 +72,17 @@ docker run --rm -p 3000:3000 littleapple-start
 
 > 运行后访问 `http://localhost:3000` 即可。
 
+### 安装为应用（PWA）
+
+在“设置 → 内容 → 应用安装”中点击“安装为应用”，然后在浏览器窗口中确认。按钮仅在浏览器提供安装事件后可用；其它情况可使用浏览器安装菜单，iPhone/iPad 可使用“分享 → 添加到主屏幕”。部署地址需要 HTTPS，localhost 可用于本地测试。
+
+应用名称和安装图标使用 LittleApple Start 产品标识。站点 Logo 与浏览器 favicon 按站点配置显示。
+
+生产环境的 Service Worker 缓存离线提示页和安装图标。断网导航时显示提示页，完整主页仍需要网络。页面 HTML、`/api/*`、构建资源和用户媒体不在这份缓存中。更新会清理旧 PWA 缓存，用户配置和网站图标缓存单独保存。开发模式不注册 Service Worker。
+
 ### 部署默认值（可选）
 
-可在 Docker 环境变量或 Vercel Project Environment Variables 中设置以下公开默认值。未设置或为空时保留内置默认；这些值只用于首次初始化和重置，已有配置及导入的 `.littleapple` 配置优先。
+可在 Docker 环境变量或 Vercel Project Environment Variables 中设置以下公开默认值。同一份构建在重启服务后读取新的运行时环境变量。未设置或为空时使用内置值；站点名称、背景和页脚默认值用于首次初始化与重置，已有配置及导入的 `.littleapple` 配置优先。
 
 ```yaml
 environment:
@@ -74,7 +95,9 @@ environment:
   LITTLEAPPLE_DEFAULT_COPYRIGHT_TEXT: "© 2026 My Site"
 ```
 
-支持的参数还包括：`LITTLEAPPLE_DEFAULT_ICP_TEXT`、`LITTLEAPPLE_DEFAULT_ICP_URL`、`LITTLEAPPLE_DEFAULT_POLICE_TEXT`、`LITTLEAPPLE_DEFAULT_POLICE_URL`。布尔值支持 `true`/`false`（也兼容 `1`/`0`）。用户自定义 Logo 的 favicon 优先级高于部署 favicon。
+支持的参数还包括：`LITTLEAPPLE_DEFAULT_ICP_TEXT`、`LITTLEAPPLE_DEFAULT_ICP_URL`、`LITTLEAPPLE_DEFAULT_POLICE_TEXT`、`LITTLEAPPLE_DEFAULT_POLICE_URL`。布尔值接受 `true`/`false` 和 `1`/`0`，非法值按未设置处理。这些参数会公开给浏览器，请勿填入密钥。
+
+favicon 按“用户自定义 Logo、部署 favicon、内置 favicon”的顺序选择。部署 favicon 是运行时回退值，没有自定义 Logo 的用户重新加载后也会看到更新；About Logo 使用用户 Logo 或内置图标。
 
 ### 本地开发与调试
 
@@ -86,7 +109,16 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-### 构建与质量检查：
+Windows 下，若 Node.js 安装在 `C:\Program Files\nodejs`，`corepack enable` 可能因权限不足报 `EPERM`，随后也无法识别 `pnpm`。可跳过该步骤，在项目目录直接运行：
+
+```powershell
+corepack pnpm install --frozen-lockfile
+corepack pnpm dev
+```
+
+此方式无需管理员权限。测试、构建和启动命令也可写成 `corepack pnpm test`、`corepack pnpm build`、`corepack pnpm start`；如果 `pnpm` 已可正常运行，继续使用下方命令即可。
+
+### 构建与质量检查
 
 ```bash
 pnpm typecheck
@@ -98,54 +130,58 @@ pnpm start
 
 ## 设置项说明
 
-> 设置面板含五个分类：
+设置顶栏提供跨分区搜索，侧栏含六个分类：
 
- * 外观：壁纸/背景视频、背景音频、特效、主题模式、材质、色彩提取与自定义调色、布局构图与间距。
- * 链接：默认搜索引擎、引擎列表管理、快捷链接与顶部操作的排序及图标配置。
- * 内容：站点名称与 Logo、时钟格式、一言源、天气位置、专注模式、动画开关、页脚及 APlayer 播放列表。
+ * 外观：壁纸/背景视频、特效、主题、图标样式、色彩提取与自定义调色、布局和间距。
+ * 链接：搜索引擎、联想词接口与代理、外部翻译入口、快捷链接和顶部操作。
+ * 内容：站点名称与 Logo、时钟、日期、一言、天气、模块显示、页脚、语言、专注模式、PWA 安装及 APlayer。
+ * 实验：Model API、AI 翻译、自定义鼠标指针和背景声音。
  * 数据：备份导入与导出（.littleapple）、重置设置、本地数据管理与旧版配置迁移。
- * 关于：版本信息（v5.0）、项目相关链接、开源协议与致谢。
+ * 关于：版本信息（v5.1）、项目相关链接、开源协议与致谢。
 
 ## 数据与隐私
 
 ### 数据存储
 
- * 项目采用 Local-first 架构，绝大部分数据均保存在本地。
- * 轻量配置：存储在 localStorage（Key: littleapple.config.v4）。
- * 媒体资源：上传的图片/视频壁纸、背景音频与自定义 Logo 存储在 IndexedDB（数据库名 LittleAppleStart，表名 assets）。
- * 备份导出：生成的 .littleapple 文件包含当前配置与本地媒体资源，用于手动迁移，不涉及任何云端备份。
- * 服务端（Vercel 或 Docker）不会收集或上传用户的任何配置与媒体资源。清理浏览器缓存会导致本地存储的数据丢失。
+ * 配置保存在 localStorage 的 `littleapple.config.v4` 中，产品版本 5.1 沿用该存储键。
+ * 上传的壁纸、背景音频、Logo、鼠标指针和快捷链接图标保存在 IndexedDB 的 `LittleAppleStart` 数据库、`assets` 表中。自动获取的网站图标使用独立 Cache Storage 缓存。
+ * `.littleapple` 备份包含当前配置和可导出的本地资源。超过 25 MiB 的壁纸、音频、Logo 或指针资源会被略过，并提示用户。模型连接元数据会导出，API Key 除外。
+ * 配置与上传资源保存在当前浏览器；迁移设备或浏览器前请导出备份。清除站点数据会删除本地配置与资源，普通刷新和清理 HTTP 缓存与之不同。
 
 ### 外发网络请求
 
 > 第三方服务的可用性和 CORS 由其自身决定。浏览器自动播放策略可能要求用户先与页面交互。
 
-在默认状态下，页面仅在以下情况发起网络请求：
+除本站页面、资源和部署默认值请求外，内置默认配置使用以下外部服务：
 
  * 校准网络时间（获取自 time.akamai.com，可在设置中切换为本机时间）。
  * 获取一言语句（请求自 v1.hitokoto.cn，失败时使用本地预设）。
+ * 输入搜索词时获取百度联想词。默认请求经 `api.allorigins.win` 转发，查询内容会发送给代理和建议服务；可在设置中关闭、改为直连或配置其它接口/代理。
 
-仅当用户手动开启或配置对应功能时，会触发以下请求：
+其它功能按配置和操作发起请求：
 
- * Open-Meteo 天气数据查询。
- * 用户自定义的一言/天气 API。
+ * 天气查询访问 Open-Meteo 的城市查询和预报服务。浏览器定位需要授权，坐标会用于 Open-Meteo 查询与 BigDataCloud 地名查询。
+ * 自定义一言接口、搜索建议接口/代理、外部搜索及翻译链接。
  * APlayer 播放器获取音频、封面与歌词。
  * 用户配置的 Meting API 获取解析后的歌曲、封面与歌词。
- * 获取第三方 Quick Link 图标。
+ * 自动网站图标通过本站 `/api/site-icon` 获取，服务端访问目标网页及其声明的图标。已缓存图标优先使用，未找到时显示首字母。手动获取网站标题通过 `/api/site-title` 访问目标页面。
+ * 用户配置或部署默认值指定的远程壁纸、favicon 和图标 URL。
+ * Model API 连接测试与 AI 翻译直接访问用户配置的接口。翻译发送当前输入及翻译指令，API Key 通过请求头发送；普通输入和打开设置不会自动发起模型请求。
 
 ## 版本说明
 
 > LittleApple Start Community Edition 是基于小苹果起始页 4.8 二次开发的开源版本，已获得原作者（LittleApple Studio / 小苹果工作室）授权发布。
 
- * 本项目完全面向社区开源与独立部署使用，虽继承了小苹果起始页的核心设计与功能，但预设资源与服务集成均与原版有所差异。
- * 请注意：本项目为社区独立维护，请勿向小苹果工作室提交任何关于本项目的反馈。再次感谢小苹果工作室对本项目开发的支持。
+ * 本项目由社区独立维护，支持自行部署。预设资源和服务集成与原版有所差异。
+ * 本项目的问题请向社区版本反馈，请勿提交给小苹果工作室。感谢小苹果工作室的授权与支持。
 
 ## 许可协议
 
-LittleApple Start Community Edition 遵循 **MIT License** 开源协议，详情请参阅 [LICENSE](LICENSE) 文件。
+LittleApple Start Community Edition 采用 MIT License，详见 [LICENSE](LICENSE)。
 
 第三方组件致谢：
 
- * `@samasante/liquid-glass` — MIT
- * `@DIYgod/APlayer` — MIT
- * `@hitokoto-osc/hitokoto-api` — Apache-2.0
+ * `@samasante/liquid-glass`：MIT
+ * `@DIYgod/APlayer`：MIT
+ * `@hitokoto-osc/hitokoto-api`：Apache-2.0
+ * Material Symbols：Apache-2.0，使用本地 SVG 图形。

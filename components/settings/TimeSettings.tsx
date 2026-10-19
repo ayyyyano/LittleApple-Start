@@ -10,10 +10,15 @@ const TIMEZONES = [
   ["Asia/Shanghai", "北京 / Shanghai (UTC+8)"],
   ["Asia/Tokyo", "Tokyo (UTC+9)"],
   ["Asia/Hong_Kong", "Hong Kong (UTC+8)"],
+  ["Asia/Taipei", "Taipei (UTC+8)"],
+  ["Asia/Singapore", "Singapore (UTC+8)"],
   ["Europe/London", "London"],
   ["Europe/Paris", "Paris"],
+  ["Europe/Moscow", "Moscow"],
   ["America/New_York", "New York"],
   ["America/Los_Angeles", "Los Angeles"],
+  ["Australia/Sydney", "Sydney"],
+  ["UTC", "UTC"],
 ] as const;
 
 export function TimeSettings() {

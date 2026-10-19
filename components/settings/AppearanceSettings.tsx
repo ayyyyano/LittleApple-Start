@@ -20,17 +20,9 @@ export function AppearanceSettings() {
   const { config, defaultConfig, updateConfig, touchAssets, notify, t } = useApp();
   const imageInput = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
-  const audioInput = useRef<HTMLInputElement>(null);
   const [extracting, setExtracting] = useState(false);
-  const [hasAudio, setHasAudio] = useState(false);
   const [customColor, setCustomColor] = useState(config.appearance.accentColor);
   const updateAppearance = (patch: Partial<AppConfig["appearance"]>) => updateConfig((current) => ({ ...current, appearance: { ...current.appearance, ...patch } }));
-
-  useEffect(() => {
-    let active = true;
-    getBackgroundAsset("audio").then((asset) => { if (active) setHasAudio(Boolean(asset)); }).catch(() => undefined);
-    return () => { active = false; };
-  }, []);
 
   useEffect(() => {
     const normalizedAccent = normalizeHex(config.appearance.accentColor);
@@ -68,39 +60,31 @@ export function AppearanceSettings() {
     }
   }
 
-  async function storeFile(file: File, kind: "visual" | "audio") {
+  async function storeFile(file: File) {
     const visualAccepted = file.type.startsWith("image/") || file.type.startsWith("video/");
-    const accepted = kind === "audio" ? file.type.startsWith("audio/") : visualAccepted;
-    if (!accepted) { notify(t("backgroundTypeError"), "danger"); return; }
+    if (!visualAccepted) { notify(t("backgroundTypeError"), "danger"); return; }
     const limit = file.type.startsWith("video/") ? 250 * 1024 * 1024 : 25 * 1024 * 1024;
     if (file.size > limit) { notify(t("backgroundTooLarge"), "danger"); return; }
     try {
-      await saveBackgroundAsset({ id: kind, blob: file, mimeType: file.type, name: file.name, updatedAt: new Date().toISOString() });
-      if (kind === "visual") {
-        const backgroundType = file.type.startsWith("video/") ? "video" : "image";
-        updateAppearance({ backgroundType });
-        if (backgroundType === "image") void extractColors(file);
-      } else setHasAudio(true);
+      await saveBackgroundAsset({ id: "visual", blob: file, mimeType: file.type, name: file.name, updatedAt: new Date().toISOString() });
+      const backgroundType = file.type.startsWith("video/") ? "video" : "image";
+      updateAppearance({ backgroundType });
+      if (backgroundType === "image") void extractColors(file);
       touchAssets();
     } catch {
       notify(t("storageError"), "danger");
     }
   }
 
-  async function remove(kind: "visual" | "audio") {
+  async function removeBackground() {
     try {
-      await deleteBackgroundAsset(kind);
-      if (kind === "visual") {
-        updateAppearance({
-          backgroundType: "none",
-          ...(config.appearance.paletteMode === "wallpaper"
-            ? { wallpaperPalette: [...DEFAULT_BACKGROUND.palette], accentColor: DEFAULT_BACKGROUND.accentColor }
-            : {}),
-        });
-      } else {
-        updateAppearance({ playBackgroundAudio: false });
-      }
-      if (kind === "audio") setHasAudio(false);
+      await deleteBackgroundAsset("visual");
+      updateAppearance({
+        backgroundType: "none",
+        ...(config.appearance.paletteMode === "wallpaper"
+          ? { wallpaperPalette: [...DEFAULT_BACKGROUND.palette], accentColor: DEFAULT_BACKGROUND.accentColor }
+          : {}),
+      });
       touchAssets();
     } catch { notify(t("storageError"), "danger"); }
   }
@@ -167,23 +151,11 @@ export function AppearanceSettings() {
             <Button onClick={() => imageInput.current?.click()}><AppIcon name="image" size={18} />{t("uploadImage")}</Button>
             <Button onClick={() => videoInput.current?.click()}><AppIcon name="video" size={18} />{t("uploadVideo")}</Button>
             <Button onClick={exportBackground} disabled={config.appearance.backgroundType === "none"}><AppIcon name="download" size={18} />{t("exportBackground")}</Button>
-            <Button variant="danger" onClick={() => remove("visual")} disabled={config.appearance.backgroundType === "none"}><AppIcon name="delete" size={18} />{t("removeBackground")}</Button>
+            <Button variant="danger" onClick={removeBackground} disabled={config.appearance.backgroundType === "none"}><AppIcon name="delete" size={18} />{t("removeBackground")}</Button>
           </div>
         </div>
-        <div className="wallpaper-resource-group">
-          <div className="wallpaper-resource-heading">
-            <h5>{t("backgroundAudio")}</h5>
-            <span className={hasAudio ? "is-ready" : undefined}>{hasAudio ? t("audioReady") : t("audioEmpty")}</span>
-          </div>
-          <div className="button-grid">
-            <Button onClick={() => audioInput.current?.click()}><AppIcon name="audio" size={18} />{hasAudio ? t("replaceAudio") : t("uploadAudio")}</Button>
-            <Button variant="danger" onClick={() => remove("audio")} disabled={!hasAudio}><AppIcon name="delete" size={18} />{t("removeAudio")}</Button>
-          </div>
-          <Switch checked={hasAudio && config.appearance.playBackgroundAudio} disabled={!hasAudio} onCheckedChange={(value) => updateAppearance({ playBackgroundAudio: value })} label={t("playAudio")} />
-        </div>
-        <input ref={imageInput} className="sr-only" type="file" accept="image/*" onChange={(event) => event.target.files?.[0] && storeFile(event.target.files[0], "visual")} />
-        <input ref={videoInput} className="sr-only" type="file" accept="video/*" onChange={(event) => event.target.files?.[0] && storeFile(event.target.files[0], "visual")} />
-        <input ref={audioInput} className="sr-only" type="file" accept="audio/*" onChange={(event) => event.target.files?.[0] && storeFile(event.target.files[0], "audio")} />
+        <input ref={imageInput} className="sr-only" type="file" accept="image/*" onChange={(event) => event.target.files?.[0] && storeFile(event.target.files[0])} />
+        <input ref={videoInput} className="sr-only" type="file" accept="video/*" onChange={(event) => event.target.files?.[0] && storeFile(event.target.files[0])} />
         <Switch checked={config.appearance.sakuraEnabled} onCheckedChange={(value) => updateAppearance({ sakuraEnabled: value })} label={t("sakuraEffect")} />
         <label className="field-label" htmlFor="fit-select"><span>{t("backgroundFit")}</span>
           <Select

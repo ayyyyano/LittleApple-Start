@@ -19,6 +19,8 @@ import { Surface } from "@/components/ui/Surface";
 import { WeatherWidget } from "@/components/weather/WeatherWidget";
 import { FloatingPlayer } from "@/components/player/FloatingPlayer";
 import { SiteIdentityMetadata } from "@/components/layout/SiteIdentityMetadata";
+import { CustomCursor } from "@/components/effects/CustomCursor";
+import { PwaRuntime } from "@/components/pwa/PwaRuntime";
 
 const SettingsPanel = dynamic(() => import("@/components/settings/SettingsPanel").then((module) => module.SettingsPanel), {
   loading: () => null,
@@ -124,7 +126,9 @@ export function HomeApp() {
 
   return (
     <div className="app-shell">
+      <PwaRuntime />
       <SiteIdentityMetadata />
+      <CustomCursor />
       <BackgroundRenderer onReady={() => setBackgroundReady(true)} />
       {startupReady && <SeasonalNotice />}
       {startupReady && (config.general.minimized ? (

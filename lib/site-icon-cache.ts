@@ -5,7 +5,9 @@ const MAX_CACHED_SITE_ICONS = 128;
 const siteIconRequests = new Map<string, Promise<Blob | null>>();
 
 function siteIconEndpoint(pageUrl: string): string {
-  return `/api/site-icon?url=${encodeURIComponent(pageUrl)}`;
+  const url = new URL(pageUrl);
+  url.hash = "";
+  return `/api/site-icon?url=${encodeURIComponent(url.href)}`;
 }
 
 async function validImageBlob(response: Response): Promise<Blob | null> {
@@ -45,13 +47,13 @@ async function trimSiteIconCache(cache: Cache): Promise<void> {
   await Promise.all(keys.slice(0, excess).map((key) => cache.delete(key)));
 }
 
-async function resolveSiteIconBlob(pageUrl: string): Promise<Blob | null> {
+async function resolveSiteIconBlob(pageUrl: string, refresh: boolean, isCurrent: () => boolean): Promise<Blob | null> {
   const endpoint = siteIconEndpoint(pageUrl);
   let cache = await openSiteIconCache();
   let cachedResponse: Response | undefined;
 
   try {
-    cachedResponse = await cache?.match(endpoint);
+    cachedResponse = refresh ? undefined : await cache?.match(endpoint);
   } catch {
     cache = null;
   }
@@ -60,18 +62,18 @@ async function resolveSiteIconBlob(pageUrl: string): Promise<Blob | null> {
     const cachedBlob = await validImageBlob(cachedResponse);
     if (cachedBlob) return cachedBlob;
     try {
-      await cache?.delete(endpoint);
+      if (isCurrent()) await cache?.delete(endpoint);
     } catch {
       cache = null;
     }
   }
 
-  const response = await fetch(endpoint);
+  const response = await fetch(refresh ? `${endpoint}&refresh=1` : endpoint, refresh ? { cache: "no-store" } : undefined);
   const responseForCache = response.clone();
   const blob = await validImageBlob(response);
   if (!blob) return null;
 
-  if (cache) {
+  if (cache && isCurrent()) {
     try {
       await cache.put(endpoint, responseForCache);
       await trimSiteIconCache(cache);
@@ -84,10 +86,24 @@ async function resolveSiteIconBlob(pageUrl: string): Promise<Blob | null> {
 }
 
 export function loadSiteIconBlob(pageUrl: string): Promise<Blob | null> {
-  const pending = siteIconRequests.get(pageUrl);
-  if (pending) return pending;
+  return requestSiteIcon(pageUrl, false);
+}
 
-  const request = resolveSiteIconBlob(pageUrl).catch(() => null);
+export function refreshSiteIconBlob(pageUrl: string): Promise<Blob | null> {
+  return requestSiteIcon(pageUrl, true);
+}
+
+function requestSiteIcon(pageUrl: string, refresh: boolean): Promise<Blob | null> {
+  try {
+    const url = new URL(pageUrl);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return Promise.resolve(null);
+    url.hash = "";
+    pageUrl = url.href;
+  } catch { return Promise.resolve(null); }
+  const pending = siteIconRequests.get(pageUrl);
+  if (pending && !refresh) return pending;
+
+  const request: Promise<Blob | null> = resolveSiteIconBlob(pageUrl, refresh, () => siteIconRequests.get(pageUrl) === request).catch(() => null);
   siteIconRequests.set(pageUrl, request);
   void request.finally(() => {
     if (siteIconRequests.get(pageUrl) === request) siteIconRequests.delete(pageUrl);

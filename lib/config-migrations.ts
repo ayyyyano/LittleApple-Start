@@ -35,13 +35,29 @@ export function migrateLegacyConfig(input: unknown): AppConfig {
   const engines: SearchEngine[] = legacyEngines.flatMap((item, index) => {
     if (!isRecord(item) || typeof item.name !== "string" || typeof item.url !== "string") return [];
     if (!item.name.trim() || !isSafeHttpUrl(item.url)) return [];
-    return [{ id: legacyId(item.name, index), name: item.name.trim(), urlTemplate: item.url.trim() }];
+    return [{ id: legacyId(item.name, index), name: item.name.trim(), urlTemplate: item.url.trim(),
+      ...(typeof item.suggest === "boolean" ? { suggestionsEnabled: item.suggest } : {}),
+    }];
   });
   if (engines.length > 0) result.search.engines = engines;
 
   const selectedUrl = typeof input.selectedSearchEngine === "string" ? input.selectedSearchEngine : "";
   const selected = result.search.engines.find((engine) => engine.urlTemplate === selectedUrl);
   result.search.defaultEngineId = selected?.id ?? result.search.engines[0]?.id ?? "bing";
+  if (typeof input.enableSuggestions === "boolean") result.search.suggestionsEnabled = input.enableSuggestions;
+  if (input.suggestProxy === "none") result.search.suggestionTransport = "direct";
+  if (input.suggestProxy === "allorigins") result.search.suggestionTransport = "allorigins";
+  if (input.suggestProxy === "custom" && typeof input.proxyCustomUrl === "string" && isSafeHttpUrl(input.proxyCustomUrl) && input.proxyCustomUrl.includes("{url}")) {
+    result.search.suggestionTransport = "custom";
+    result.search.suggestionProxyUrl = input.proxyCustomUrl;
+  }
+  if (["auto", "baidu", "bing", "google", "duckduckgo", "custom"].includes(String(input.suggestProvider))) {
+    result.search.suggestionProvider = input.suggestProvider as AppConfig["search"]["suggestionProvider"];
+  }
+  if (typeof input.enableTranslationSuggest === "boolean") result.search.translationEnabled = input.enableTranslationSuggest;
+  if (["baidu", "google", "bing", "custom"].includes(String(input.translateProvider))) {
+    result.search.translationProvider = input.translateProvider as AppConfig["search"]["translationProvider"];
+  }
 
   const locale = input.selectedLanguage;
   if (locale === "zh-CN" || locale === "zh-TW" || locale === "en") result.locale = locale as Locale;
@@ -90,6 +106,15 @@ export function migrateV2Config(input: unknown): AppConfig {
         : engines[0].id;
     }
     if (typeof search.suggestionsEnabled === "boolean") result.search.suggestionsEnabled = search.suggestionsEnabled;
+    if (["auto", "baidu", "bing", "google", "duckduckgo", "custom"].includes(String(search.suggestionProvider))) {
+      result.search.suggestionProvider = search.suggestionProvider as AppConfig["search"]["suggestionProvider"];
+    }
+    if (typeof search.suggestionApiUrl === "string" && isSafeHttpUrl(search.suggestionApiUrl)) result.search.suggestionApiUrl = search.suggestionApiUrl;
+    if (typeof search.translationEnabled === "boolean") result.search.translationEnabled = search.translationEnabled;
+    if (["baidu", "google", "bing", "custom"].includes(String(search.translationProvider))) {
+      result.search.translationProvider = search.translationProvider as AppConfig["search"]["translationProvider"];
+    }
+    if (typeof search.translationUrlTemplate === "string" && isSafeHttpUrl(search.translationUrlTemplate)) result.search.translationUrlTemplate = search.translationUrlTemplate;
   }
 
   if (Array.isArray(input.quickLinks)) {

@@ -2,6 +2,7 @@ import { cloneDefaultConfig } from "@/lib/default-config";
 import { applyDeploymentDefaults, type DeploymentDefaults } from "@/lib/deployment-defaults";
 import { migrateLegacyConfig, migrateV2Config } from "@/lib/config-migrations";
 import { parseCurrentConfig } from "@/lib/config-parser";
+import { publicModelConfiguration } from "@/lib/model-api-config";
 import { dataUrlToBlob, saveBackgroundAsset } from "@/services/background-storage";
 import type { AppConfig } from "@/types/config";
 
@@ -123,7 +124,7 @@ export async function loadStoredConfig(deploymentDefaults: DeploymentDefaults = 
 }
 
 export function saveStoredConfig(config: AppConfig): void {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(publicModelConfiguration(config)));
 }
 
 export function removeStoredConfig(): void {

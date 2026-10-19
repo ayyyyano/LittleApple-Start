@@ -17,7 +17,7 @@ import {
 import type { ConfigExportV4 } from "@/types/config";
 
 export function DataSettings({ onFinished }: { onFinished: () => void }) {
-  const { config, replaceConfig, touchAssets, notify, t, refreshDeploymentDefaults } = useApp();
+  const { config, replaceConfig, updateConfig, touchAssets, notify, t, refreshDeploymentDefaults } = useApp();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<ConfigExportV4 | null>(null);
   // Keep the last preview snapshot while Dialog owns its exit presence.
@@ -79,7 +79,7 @@ export function DataSettings({ onFinished }: { onFinished: () => void }) {
       <SettingGroup title={t("data")}>
         <Switch
           checked={config.general.autoDownloadConfig}
-          onCheckedChange={(value) => replaceConfig({ ...config, general: { ...config.general, autoDownloadConfig: value } })}
+          onCheckedChange={(value) => updateConfig((current) => ({ ...current, general: { ...current.general, autoDownloadConfig: value } }))}
           label={t("autoDownload")}
         />
         <div className="button-grid">

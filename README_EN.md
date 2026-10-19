@@ -4,7 +4,7 @@
 
 [DEMO](https://start.nekro.top/) | [简体中文](README.md)
 
-**LittleApple Start Community Edition** is a browser start page improved from [LittleApple Start Page 4.8](https://www.littleapple.top/startweb.html). The project follows a local-first approach and focuses on highly flexible visual customization and interface composition, making it suitable as a browser home page or new tab page.
+LittleApple Start Community Edition is a browser start page based on [LittleApple Start Page](https://www.littleapple.top/startweb.html). You can customize the background, theme, and homepage layout. Configuration and uploaded assets are stored in your browser.
 
 ## Preview
 
@@ -17,29 +17,42 @@
 * Personalized wallpapers: supports image and video backgrounds with fill, fit, stretch, tile, and center layout modes.
 * Fine-grained controls: customize wallpaper focal point, overlay opacity, blur strength, and effects such as falling Sakura petals.
 * Palette extraction and accent colors: includes a preset palette, can extract tones from custom images, and supports manually specified accent colors.
-* Theme materials: Light, Dark, and System modes are paired with three themes: Simple (Content First), Material (Color First), and Liquid Glass (Environment First, the default). 
+* Theme materials: Light, Dark, and System modes are paired with three themes: Simple (Content First), Material (Color First), and Liquid Glass (Environment First, the default).
 * Flexible composition: adjust overall and per-module scale, spacing, and the position of interface elements.
+
+Material uses M3-inspired color roles and tonal containers. Liquid Glass uses refraction on a few focal surfaces such as Search; Quick Links and the Settings shell use CSS materials. Icon styles are Auto, Feather, and Material Symbols. Auto uses Material Symbols for fixed UI in Material and Feather in Simple and Liquid Glass. Custom Top Actions use their saved icon provider.
 
 ### Modules
 
 * Clock and date: supports multiple time zones, 12/24-hour format, seconds, and multiple date formats.
-* Search: includes search engine management, a configurable default engine, and search suggestions.
-* Quick links and actions: supports customizable Quick Links with icon handling, sorting, and a local initial-letter fallback, plus fixed Top Actions.
-* Focus Mode: hides nonessential interface elements for an unobstructed view of the background.
-* Quotes and weather: Hitokoto API is enabled by default with a local fallback; Open-Meteo weather is optional.
+* Search and translation: manage search engines, choose or configure suggestion APIs and proxies, and toggle suggestions per engine. External translation entries support Baidu, Google, Bing, and custom links.
+* Quick links and actions: reorder Quick Links by dragging, upload local icons, or fetch icons declared by each webpage. Links show their initial letter until an icon is available, then cache it locally. Top Actions support custom links and icon providers.
+* Focus Mode: hide homepage modules to view the background.
+* Quotes and weather: Hitokoto is enabled by default, with cached or preset text on failure. Optional Open-Meteo weather supports city input, browser location, temperature units, display options, and refresh intervals.
 * Audio: supports independently managed background audio stored in the browser and an APlayer playlist with network audio, cover, and LRC lyrics URLs. APlayer also has an optional experimental Meting integration for song, playlist, album, search, and artist resolution.
 * Footer: supports custom copyright text and optional ICP and public-security filing information.
+* Settings search: find settings across categories from the header search field.
+* App installation: PWA installation entry and an offline notice, with installation options determined by the browser.
+
+### Experimental Features
+
+* Custom cursor: upload an image and adjust its size and hotspot on desktop. Mobile devices cannot enable it.
+* Background audio: upload local audio and control playback from Experimental settings.
+* Model API: manage multiple OpenAI-compatible Chat Completions connections, specify an endpoint and model, and test connections manually.
+* AI translation: choose a model, translate the current input from the search candidate popup, and copy the result. Target languages are Simplified Chinese, Traditional Chinese, and English. External translation links remain available.
+
+Model API and AI translation are off by default. Connection tests and translations may incur API charges. API keys remain in session memory, must be entered again after a reload, and are excluded from exports. The browser sends requests directly to the selected endpoint, subject to its CORS policy. Remote endpoints require HTTPS; localhost/loopback development endpoints may use HTTP.
 
 ## Tech Stack
 
 * Framework and language: Next.js 16 (App Router) / React 19 / TypeScript
-* Styling and UI: Tailwind CSS 4 + CSS Variables / Feather Icons / bundled semantic Material Symbols / liquid-glass
+* Styling and UI: Tailwind CSS 4 + CSS Variables / Feather Icons / bundled Material Symbols SVGs / liquid-glass
 * Interaction and storage: dnd-kit / IndexedDB + LocalStorage / APlayer
 * Testing and quality: Vitest / ESLint
 
 ## Deployment
 
-> No server database is required. Optional runtime deployment environment variables only seed new users and reset defaults. Configuration and media files remain in each user's browser.
+The project needs no server database. Runtime environment variables can set site defaults and a favicon. User configuration and uploaded assets are stored in the browser.
 
 ### Deploy with Vercel (Recommended)
 
@@ -59,9 +72,17 @@ docker run --rm -p 3000:3000 littleapple-start
 
 > Open `http://localhost:3000` after the container starts.
 
+### Install as an App (PWA)
+
+Open Settings → Content → App installation, click "Install as app", and confirm in the browser dialog. The button becomes available when the browser offers an install event. Otherwise, use the browser's installation menu; on iPhone/iPad, choose Share → Add to Home Screen. Deployment requires HTTPS; localhost works for local testing.
+
+The installed app uses the LittleApple Start product name and bundled icons. The site Logo and browser favicon follow the site configuration.
+
+The production service worker caches an offline notice and installation icons. Offline navigation shows the notice; the full homepage still needs a network connection. Page HTML, `/api/*`, build assets, and user media are outside this cache. Updates remove older PWA caches. User configuration and website icon caches are stored separately. Development mode does not register the service worker.
+
 ### Optional Deployment Defaults
 
-The following public defaults can be set as Docker environment variables or Vercel Project Environment Variables. Unset or empty values keep the built-in defaults. They seed first-run configuration and Reset only; existing user settings and imported `.littleapple` files take precedence.
+Set the following public defaults as Docker environment variables or Vercel Project Environment Variables. The same build reads new runtime values after a server restart. Unset or empty values use the built-in defaults. Site name, background, and Footer defaults seed first-run configuration and Reset; existing user settings and imported `.littleapple` files take precedence.
 
 ```yaml
 environment:
@@ -74,7 +95,9 @@ environment:
   LITTLEAPPLE_DEFAULT_COPYRIGHT_TEXT: "© 2026 My Site"
 ```
 
-Additional supported parameters are `LITTLEAPPLE_DEFAULT_ICP_TEXT`, `LITTLEAPPLE_DEFAULT_ICP_URL`, `LITTLEAPPLE_DEFAULT_POLICE_TEXT`, and `LITTLEAPPLE_DEFAULT_POLICE_URL`. Boolean values accept `true`/`false` (and `1`/`0`). A user's custom Logo has higher favicon priority than the deployment favicon.
+Additional parameters are `LITTLEAPPLE_DEFAULT_ICP_TEXT`, `LITTLEAPPLE_DEFAULT_ICP_URL`, `LITTLEAPPLE_DEFAULT_POLICE_TEXT`, and `LITTLEAPPLE_DEFAULT_POLICE_URL`. Booleans accept `true`/`false` and `1`/`0`; invalid values are treated as unset. These values are public browser data, so keep credentials out of them.
+
+Favicon priority is custom user Logo, deployment favicon, then built-in favicon. The deployment favicon is a runtime fallback: users without a custom Logo see changes after reloading. The About Logo uses the user's Logo or the bundled icon.
 
 ### Local Development and Debugging
 
@@ -85,6 +108,15 @@ corepack enable
 pnpm install --frozen-lockfile
 pnpm dev
 ```
+
+On Windows, if Node.js is installed in `C:\Program Files\nodejs`, `corepack enable` may fail with `EPERM` because it cannot write command shims there. The `pnpm` command may then be unavailable. Skip that step and run these commands from the project directory:
+
+```powershell
+corepack pnpm install --frozen-lockfile
+corepack pnpm dev
+```
+
+This works without administrator privileges. Use the same prefix for tests, builds, and startup: `corepack pnpm test`, `corepack pnpm build`, or `corepack pnpm start`. If `pnpm` already works, use the commands below.
 
 ### Build and Quality Checks
 
@@ -98,54 +130,58 @@ pnpm start
 
 ## Settings
 
-> The Settings panel contains five categories:
+The header search field searches across six Settings categories:
 
-* Appearance: wallpapers and background video, background audio, effects, theme modes, materials, palette extraction, custom colors, composition, and spacing.
-* Links: default search engine, engine list management, Quick Links, Top Actions, ordering, and icon configuration.
-* Content: site name and Logo, clock format, quote source, weather location, Focus Mode, motion, Footer, and APlayer playlist.
+* Appearance: wallpapers and background video, effects, themes, icon style, palette extraction, custom colors, layout, and spacing.
+* Links: search engines, suggestion APIs and proxies, external translation entries, Quick Links, and Top Actions.
+* Content: site name and Logo, clock, date, quotes, weather, module visibility, Footer, language, Focus Mode, PWA installation, and APlayer.
+* Experimental: Model API, AI translation, custom cursor, and background audio.
 * Data: `.littleapple` backup import and export, reset controls, local data management, and legacy configuration migration.
-* About: Version 5.0, project links, open-source license, and acknowledgements.
+* About: Version 5.1, project links, open-source license, and acknowledgements.
 
 ## Data and Privacy
 
 ### Data Storage
 
-* The project follows a local-first architecture, and most data remains on the current device.
-* Lightweight configuration is stored in `localStorage` under `littleapple.config.v4`.
-* Uploaded image and video wallpapers, background audio, and custom Logos are stored in the `assets` store of the `LittleAppleStart` IndexedDB database.
-* Exported `.littleapple` files contain the current configuration and local media for manual migration; they are not cloud backups.
-* The Vercel or Docker server does not collect or upload user configuration or media. Clearing browser site data removes locally stored data.
+* Configuration is stored in `localStorage` under `littleapple.config.v4`, including in product version 5.1.
+* Uploaded wallpapers, background audio, Logos, cursors, and Quick Link icons are stored in the `assets` store of the `LittleAppleStart` IndexedDB database. Automatically fetched website icons use a separate Cache Storage cache.
+* `.littleapple` backups contain the current configuration and exportable local assets. Wallpaper, audio, Logo, or cursor assets larger than 25 MiB are omitted with a warning. Model connection metadata is exported; API keys are excluded.
+* Export a backup before changing browsers or devices. Clearing site data removes local configuration and assets; a normal reload or clearing the HTTP cache is a different operation.
 
 ### Outbound Network Requests
 
 > Third-party availability and CORS behavior are controlled by those services. Browser autoplay policy may require user interaction before media playback.
 
-By default, the page sends network requests only for:
+Besides same-origin pages, assets, and deployment defaults, the built-in configuration uses these external services:
 
 * Network time calibration from `time.akamai.com`, which can be replaced with device time in Settings.
 * Hitokoto quotes from `v1.hitokoto.cn`, with a local fallback when the request fails.
+* Baidu search suggestions when typing a query. The default transport uses `api.allorigins.win`, so both the proxy and suggestion service receive the query. Settings can disable suggestions, use direct requests, or configure another endpoint or proxy.
 
-The following requests occur only after the user enables or configures the corresponding feature:
+Other requests depend on configuration and user actions:
 
-* Open-Meteo weather data.
-* User-configured quote or weather APIs.
+* Weather uses Open-Meteo's geocoding and forecast services. Browser location requires permission; coordinates are used for Open-Meteo requests and BigDataCloud reverse geocoding.
+* Custom quote APIs, suggestion APIs or proxies, external search, and translation links.
 * APlayer audio, cover, and lyrics resources.
 * User-configured Meting API requests for resolved tracks, covers, and lyrics.
-* Third-party Quick Link icons.
+* Automatic website icons use the same-origin `/api/site-icon` route. The server visits the target webpage and its declared icon. Cached icons take priority; unavailable icons fall back to initials. Manual title lookup uses `/api/site-title` to visit the target page.
+* Remote wallpaper, favicon, and icon URLs from user configuration or deployment defaults.
+* Model API tests and AI translation go directly to the configured endpoint. Translation sends the current input and translation instructions; the API key is sent in a request header. Typing and opening Settings do not automatically send model requests.
 
 ## Version Notes
 
 > LittleApple Start Community Edition is an open-source edition developed from LittleApple Start Page 4.8 and released with authorization from the original author, LittleApple Studio.
 
-* This project is intended for community open-source use and independent deployment. It inherits the core design and functionality of LittleApple Start Page, while its preset assets and service integrations differ from the original release.
-* This project is maintained independently by the community. Please do not submit feedback about this project to LittleApple Studio. We thank LittleApple Studio for supporting its development.
+* The community maintains this project for self-hosting. Its preset assets and service integrations differ from the original release.
+* Please report issues to the community edition rather than LittleApple Studio. We thank LittleApple Studio for its permission and support.
 
 ## License
 
-LittleApple Start Community Edition is released under the **MIT License**. See [LICENSE](LICENSE) for details.
+LittleApple Start Community Edition uses the MIT License. See [LICENSE](LICENSE).
 
 Third-party acknowledgements:
 
-* `@samasante/liquid-glass` — MIT
-* `@DIYgod/APlayer` — MIT
-* `@hitokoto-osc/hitokoto-api` — Apache-2.0
+* `@samasante/liquid-glass`: MIT
+* `@DIYgod/APlayer`: MIT
+* `@hitokoto-osc/hitokoto-api`: Apache-2.0
+* Material Symbols: Apache-2.0, bundled SVG glyphs.

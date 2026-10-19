@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { useApp } from "@/components/providers/AppProvider";
 import { DEFAULT_BACKGROUND } from "@/lib/default-background";
 import { getBackgroundAsset } from "@/services/background-storage";
+import { readWallpaperPaint } from "@/lib/wallpaper-paint";
+import { publishWallpaperPaint } from "@/services/wallpaper-paint";
 
 interface BackgroundUrls {
   visual?: string;
@@ -23,17 +25,19 @@ function BackgroundVisual({
   onLoadedData,
   onError,
   videoRef,
+  active = false,
 }: {
   source: VisualSource;
   className: string;
   onLoadedData?: () => void;
   onError?: () => void;
   videoRef?: RefObject<HTMLVideoElement | null>;
+  active?: boolean;
 }) {
   if (source.type === "video") {
     return <video ref={videoRef} className={`background-media background-media--${source.fit} ${className}`} src={source.url} autoPlay loop muted playsInline preload="metadata" onLoadedData={onLoadedData} onError={onError} />;
   }
-  return <div className={`background-media background-image background-media--${source.fit} ${className}`} style={{ backgroundImage: `url(${JSON.stringify(source.url)})` }} />;
+  return <div data-wallpaper-active={active || undefined} className={`background-media background-image background-media--${source.fit} ${className}`} style={{ backgroundImage: `url(${JSON.stringify(source.url)})` }} />;
 }
 
 export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
@@ -56,9 +60,11 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
   const videoWasPlayingBeforeHidden = useRef(false);
   const backgroundRootRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const loadedImages = useRef(new Set<string>());
 
   const revokeCreatedUrl = useCallback((url?: string) => {
     if (!url || !createdUrls.current.delete(url)) return;
+    loadedImages.current.delete(url);
     URL.revokeObjectURL(url);
   }, []);
 
@@ -212,6 +218,7 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
     const image = new Image();
     const commit = (failed = false) => {
       if (cancelled) return;
+      if (!failed) loadedImages.current.add(candidate.url);
       commitSource(candidate, failed);
     };
     image.onload = () => commit(false);
@@ -220,6 +227,33 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
     image.decode?.().then(() => commit(false)).catch(() => undefined);
     return () => { cancelled = true; image.onload = null; image.onerror = null; };
   }, [candidate, commitSource, releaseUrlWhenUnused]);
+
+  useLayoutEffect(() => {
+    const root = backgroundRootRef.current;
+    const usable = config.appearance.backgroundType !== "video" && activeSource?.type === "image" && activeSource.key === candidate?.key && loadedImages.current.has(activeSource.url) && crossfadePhase === "idle";
+    publishWallpaperPaint(null);
+    if (!root || !usable) return;
+    let frame = 0;
+    const measure = () => {
+      const media = root.querySelector<HTMLElement>("[data-wallpaper-active]");
+      publishWallpaperPaint(media ? readWallpaperPaint(root, media) : null);
+    };
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
+    schedule();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
+    const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
+    observer?.observe(root);
+    colorScheme.addEventListener("change", schedule);
+    window.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("resize", schedule);
+    return () => {
+      observer?.disconnect(); cancelAnimationFrame(frame);
+      colorScheme.removeEventListener("change", schedule);
+      window.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
+      publishWallpaperPaint(null);
+    };
+  }, [activeSource, candidate?.key, crossfadePhase, config.appearance.backgroundType, config.appearance.blur, config.appearance.focalX, config.appearance.focalY, config.appearance.overlay, config.theme.mode]);
 
   const handleVideoReady = useCallback(() => {
     const source = pendingVideoRef.current ?? pendingVideo;
@@ -295,7 +329,7 @@ export function BackgroundRenderer({ onReady }: { onReady?: () => void }) {
   return (
     <div ref={backgroundRootRef} className="background-root" style={customProperties} aria-hidden="true">
       {outgoingSource && <BackgroundVisual source={outgoingSource} className={crossfadePhase === "running" ? "background-media--outgoing" : ""} />}
-      {activeSource && <BackgroundVisual source={activeSource} className={crossfadePhase === "entering" ? "background-media--entering" : ""} videoRef={videoRef} />}
+      {activeSource && <BackgroundVisual source={activeSource} active className={crossfadePhase === "entering" ? "background-media--entering" : ""} videoRef={videoRef} />}
       {pendingVideo && candidate?.type === "video" && pendingVideo.key === candidate.key && <BackgroundVisual source={pendingVideo} className="background-media--pending" onLoadedData={handleVideoReady} onError={handleVideoError} />}
       <div className="background-overlay" />
       {urls.audio && config.appearance.backgroundType !== "video" && <audio ref={audioRef} src={urls.audio} loop preload="none" />}
