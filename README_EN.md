@@ -164,7 +164,7 @@ Other requests depend on configuration and user actions:
 * Custom quote APIs, suggestion APIs or proxies, external search, and translation links.
 * APlayer audio, cover, and lyrics resources.
 * User-configured Meting API requests for resolved tracks, covers, and lyrics.
-* Automatic website icons use the same-origin `/api/site-icon` route. The server visits the target webpage and its declared icon. Cached icons take priority; unavailable icons fall back to initials. Manual title lookup uses `/api/site-title` to visit the target page.
+* Automatic website icons use the same-origin `/api/site-icon` route, trying declared icons, the site's `/favicon.ico`, then Google S2 (hostname only). Valid images are cached in the browser for 30 days. Failed lookups can be retried or refreshed in link settings; initials are the final fallback. Custom icons take priority. Manual title lookup uses `/api/site-title` to visit the target page.
 * Remote wallpaper, favicon, and icon URLs from user configuration or deployment defaults.
 * Model API tests and AI translation go directly to the configured endpoint. Translation sends the current input and translation instructions; the API key is sent in a request header. Typing and opening Settings do not automatically send model requests.
 

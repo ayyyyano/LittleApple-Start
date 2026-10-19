@@ -4,6 +4,7 @@ import { GET as iconRequest } from "@/app/api/site-icon/route";
 
 const { lookup } = vi.hoisted(() => ({ lookup: vi.fn() }));
 vi.mock("node:dns/promises", () => ({ lookup }));
+vi.mock("@/lib/server/public-http", () => ({ requestPublicUrl: (url: URL, _addresses: unknown, accept: string, signal: AbortSignal) => fetch(url, { signal, headers: { Accept: accept } }) }));
 
 beforeEach(() => {
   lookup.mockResolvedValue([{ address: "8.8.8.8", family: 4 }]);
@@ -41,11 +42,12 @@ describe("shared website metadata network boundary", () => {
     }
   });
 
-  it("refreshes only declared icons, disables response caching, and never guesses paths", async () => {
+  it("refreshes declared icons and uses bounded fallbacks after an absent declaration", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response('<head><link rel="icon" href="/declared.png"></head>', { headers: { "Content-Type": "text/html" } }))
-      .mockResolvedValueOnce(new Response("image", { headers: { "Content-Type": "image/png" } }))
-      .mockResolvedValueOnce(new Response("<head><title>No icon</title></head>", { headers: { "Content-Type": "text/html" } }));
+      .mockResolvedValueOnce(new Response('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><path d="M0 0h32v32H0z"/></svg>', { headers: { "Content-Type": "image/svg+xml" } }))
+      .mockResolvedValueOnce(new Response("<head><title>No icon</title></head>", { headers: { "Content-Type": "text/html" } }))
+      .mockRejectedValue(new Error("Not found"));
     vi.stubGlobal("fetch", fetchMock);
     const result = await iconRequest(new Request("http://localhost/api/site-icon?url=https://example.com&refresh=1"));
     expect(result.status).toBe(200);
@@ -53,6 +55,6 @@ describe("shared website metadata network boundary", () => {
     expect(String(fetchMock.mock.calls[1][0])).toBe("https://example.com/declared.png");
     const empty = await iconRequest(new Request("http://localhost/api/site-icon?url=https://example.com&refresh=1"));
     expect(empty.status).toBe(204);
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
   });
 });

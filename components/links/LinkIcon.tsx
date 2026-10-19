@@ -38,7 +38,7 @@ function LinkIconImage({ title, url, customIcon, iconAssetId, size }: { title: s
       if (!active || !blob) return;
       objectUrl = URL.createObjectURL(blob);
       setSource(objectUrl);
-    });
+    }).catch(() => { /* Keep initials visible when local asset storage is unavailable. */ });
 
     return () => {
       active = false;
@@ -53,7 +53,7 @@ function LinkIconImage({ title, url, customIcon, iconAssetId, size }: { title: s
   return (
     <span className="link-icon-stack" aria-hidden="true" title={title}>
       <span className="link-icon-fallback">{fallback}</span>
-      {/* The same-origin route discovers and proxies only explicitly declared page icons. */}
+      {/* Automatic icons have passed the same-origin resolver and browser decode checks. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className={loaded ? "is-loaded" : ""}

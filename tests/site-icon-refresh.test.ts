@@ -44,7 +44,7 @@ describe("explicit network icon refresh", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(await (await refreshSiteIconBlob("https://example.com/"))?.text()).toBe("new");
     expect(fetchMock.mock.calls[1][0]).toContain("refresh=1");
-    expect(fetchMock.mock.calls[1][1]).toEqual({ cache: "no-store" });
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({ cache: "no-store", signal: expect.any(AbortSignal) });
     expect(await (await loadSiteIconBlob("https://example.com/"))?.text()).toBe("new");
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
@@ -71,5 +71,14 @@ describe("explicit network icon refresh", () => {
     releaseOld(image("stale"));
     await old;
     expect(await (await loadSiteIconBlob("https://example.com/"))?.text()).toBe("latest");
+  });
+
+  it("retains short failure backoff after reloading the client module", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await (await import("@/lib/site-icon-cache")).loadSiteIconBlob("https://missing.example/");
+    vi.resetModules();
+    expect(await (await import("@/lib/site-icon-cache")).loadSiteIconBlob("https://missing.example/")).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { findDeclaredSiteIcon, isPrivateOrReservedIp } from "@/lib/site-icon";
+import { findDeclaredSiteIcon, findDeclaredSiteIcons, isPrivateOrReservedIp } from "@/lib/site-icon";
 
 describe("declared site icon discovery", () => {
   it("resolves an explicitly declared relative icon", () => {
@@ -60,6 +60,17 @@ describe("declared site icon discovery", () => {
     `;
     expect(findDeclaredSiteIcon(html, "https://example.com/")).toBeNull();
   });
+
+  it("keeps ordered alternatives, decodes entities, ignores comments/scripts and deduplicates URLs", () => {
+    const html = `<head><!-- <link rel="icon" href="/fake.svg"> --><script>const fake='<link rel="icon" href="/script.svg">';</script>
+      <link rel="icon" href="/large.png" sizes="512x512">
+      <link rel="shortcut icon" href="icons/good.png?a=1&amp;b=2" sizes="64x64">
+      <link rel="icon" href="icons/good.png?a=1&amp;b=2" sizes="32x32">
+      <link rel="apple-touch-icon" href="/touch.png"></head>`;
+    expect(findDeclaredSiteIcons(html, "https://example.com/app/page?token=private")).toEqual([
+      "https://example.com/app/icons/good.png?a=1&b=2", "https://example.com/large.png", "https://example.com/touch.png",
+    ]);
+  });
 });
 
 describe("site icon network boundary", () => {
@@ -74,11 +85,19 @@ describe("site icon network boundary", () => {
     "::ffff:7f00:1",
     "fc00::1",
     "fe80::1",
+    "::127.0.0.1",
+    "64:ff9b::a00:1",
+    "2002:7f00:1::",
+    "2001:0:4136:e378::1",
+    "2001:2::1",
+    "192.0.2.1",
+    "198.51.100.1",
+    "203.0.113.1",
   ])("rejects private or reserved address %s", (address) => {
     expect(isPrivateOrReservedIp(address)).toBe(true);
   });
 
-  it.each(["1.1.1.1", "8.8.8.8", "2606:4700:4700::1111"])(
+  it.each(["1.1.1.1", "8.8.8.8", "192.0.78.17", "198.51.42.1", "203.0.10.1", "2606:4700:4700::1111", "2001:4860:4860::8888"])(
     "allows public address %s",
     (address) => {
       expect(isPrivateOrReservedIp(address)).toBe(false);

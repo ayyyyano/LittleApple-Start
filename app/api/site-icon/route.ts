@@ -1,5 +1,5 @@
-import { findDeclaredSiteIcon } from "@/lib/site-icon";
-import { assertPublicHttpUrl, fetchHtml, fetchPublicResponse } from "@/lib/server/site-metadata";
+import { assertPublicHttpUrl, fetchPublicResponse } from "@/lib/server/site-metadata";
+import { discoverSiteIcons, iconContentType, isServicePlaceholder, MAX_ICON_CANDIDATES } from "@/lib/server/site-icon-resolver";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,32 +51,43 @@ export async function GET(request: Request): Promise<Response> {
   const target = params.get("url")?.trim();
   const cacheControl = params.get("refresh") === "1" ? "no-store" : CACHE_CONTROL;
   if (!target) return Response.json({ error: "Missing url" }, { status: 400 });
+  const start = Number(params.get("start") ?? 0);
+  if (!Number.isInteger(start) || start < 0 || start >= MAX_ICON_CANDIDATES) return emptyResponse("no-store");
 
   try {
     const pageUrl = await assertPublicHttpUrl(target);
-    const { html, finalUrl } = await fetchHtml(pageUrl);
-    const iconUrl = findDeclaredSiteIcon(html, finalUrl);
-    if (!iconUrl) return emptyResponse(cacheControl);
-
-    const { response } = await fetchPublicResponse(
-      await assertPublicHttpUrl(iconUrl),
-      "image/avif,image/webp,image/svg+xml,image/*,*/*;q=0.1",
-    );
-    const contentType = response.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
-    if (!contentType.startsWith("image/")) return emptyResponse(cacheControl);
-
-    const icon = await readBytes(response, MAX_ICON_BYTES);
-    if (icon.byteLength === 0) return emptyResponse(cacheControl);
-
-    const iconBody = icon.buffer.slice(icon.byteOffset, icon.byteOffset + icon.byteLength) as ArrayBuffer;
-    return new Response(iconBody, {
-      headers: {
-        "Cache-Control": cacheControl,
-        "Content-Type": contentType,
-        "X-Content-Type-Options": "nosniff",
-      },
-    });
+    pageUrl.search = "";
+    pageUrl.hash = "";
+    const signal = AbortSignal.timeout(15_000);
+    const candidates = await discoverSiteIcons(pageUrl, params.get("refresh") === "1" && start === 0, signal);
+    for (let index = start; index < candidates.length && !signal.aborted; index += 1) {
+      try {
+        const candidate = candidates[index];
+        const { response } = await fetchPublicResponse(new URL(candidate.url), "image/png,image/svg+xml,image/x-icon,image/webp,image/*;q=0.8", AbortSignal.any([signal, AbortSignal.timeout(3_000)]));
+        if (!response.headers.get("content-type")?.toLowerCase().startsWith("image/")) {
+          await response.body?.cancel();
+          continue;
+        }
+        const icon = await readBytes(response, MAX_ICON_BYTES);
+        const contentType = iconContentType(icon);
+        if (!contentType || (candidate.source === "service" && isServicePlaceholder(icon))) continue;
+        const iconBody = icon.buffer.slice(icon.byteOffset, icon.byteOffset + icon.byteLength) as ArrayBuffer;
+        return new Response(iconBody, {
+          headers: {
+            "Cache-Control": cacheControl,
+            "Content-Type": contentType,
+            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+            "X-Content-Type-Options": "nosniff",
+            "X-Site-Icon-Source": candidate.source,
+            "X-Site-Icon-Next": String(index + 1),
+          },
+        });
+      } catch {
+        // Try the next bounded candidate after a failed request or invalid image.
+      }
+    }
+    return emptyResponse("public, max-age=60");
   } catch {
-    return emptyResponse(cacheControl);
+    return emptyResponse("no-store");
   }
 }
