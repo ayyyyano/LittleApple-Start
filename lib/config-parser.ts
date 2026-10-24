@@ -166,7 +166,7 @@ export function parseCurrentConfig(value: unknown): AppConfig {
     }
     result.search.suggestionApiUrl = safeUrlOr(search.suggestionApiUrl, fallback.search.suggestionApiUrl);
     if (["auto", "direct", "allorigins", "custom"].includes(String(search.suggestionTransport))) {
-      result.search.suggestionTransport = search.suggestionTransport as AppConfig["search"]["suggestionTransport"];
+      result.search.suggestionTransport = search.suggestionTransport === "allorigins" ? "auto" : search.suggestionTransport as AppConfig["search"]["suggestionTransport"];
     }
     result.search.suggestionProxyUrl = safeUrlOr(search.suggestionProxyUrl, "");
     result.search.translationEnabled = booleanOr(search.translationEnabled, fallback.search.translationEnabled);

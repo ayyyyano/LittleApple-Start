@@ -15,7 +15,7 @@ import { MODEL_ERROR_MESSAGES } from "@/i18n/model-api";
 export function SearchBox() {
   const { config, updateConfig, t, notify } = useApp();
   const [query, setQuery] = useState("");
-  const [suggestionState, setSuggestionState] = useState({ key: "", items: [] as string[], loading: false });
+  const [suggestionState, setSuggestionState] = useState({ key: "", items: [] as string[], loading: false, error: "" });
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const listId = useId();
@@ -33,6 +33,7 @@ export function SearchBox() {
   const suggestionKey = JSON.stringify([query.trim(), engine?.id, suggestionsEnabled, config.search.suggestionProvider, config.search.suggestionApiUrl, config.search.suggestionTransport, config.search.suggestionProxyUrl]);
   const suggestions = suggestionsEnabled && suggestionState.key === suggestionKey ? suggestionState.items : [];
   const loading = suggestionsEnabled && suggestionState.key === suggestionKey && suggestionState.loading;
+  const suggestionError = suggestionsEnabled && suggestionState.key === suggestionKey ? suggestionState.error : "";
 
   useEffect(() => {
     window.clearTimeout(debounceRef.current);
@@ -42,13 +43,13 @@ export function SearchBox() {
     debounceRef.current = window.setTimeout(async () => {
       const controller = new AbortController();
       abortRef.current = controller;
-      setSuggestionState({ key: suggestionKey, items: [], loading: true });
+      setSuggestionState({ key: suggestionKey, items: [], loading: true, error: "" });
       try {
         if (!engine) return;
         const items = await fetchSearchSuggestions(config.search.suggestionProvider, config.search.suggestionApiUrl, trimmed, engine, controller.signal, config.search.suggestionTransport, config.search.suggestionProxyUrl);
-        if (!controller.signal.aborted) setSuggestionState({ key: suggestionKey, items, loading: false });
-      } catch {
-        if (!controller.signal.aborted) setSuggestionState({ key: suggestionKey, items: [], loading: false });
+        if (!controller.signal.aborted) setSuggestionState({ key: suggestionKey, items, loading: false, error: "" });
+      } catch (error) {
+        if (!controller.signal.aborted) setSuggestionState({ key: suggestionKey, items: [], loading: false, error: error instanceof Error && error.message === "SUGGESTION_TIMEOUT" ? "timeout" : "failed" });
       }
     }, 320);
     return () => {
@@ -166,7 +167,7 @@ export function SearchBox() {
               ))}
               </div>
               {loading && <div className="suggestions-state">{t("suggestionsLoading")}</div>}
-              {suggestionsEnabled && !loading && suggestions.length === 0 && <div className="suggestions-state">{t("suggestionsEmpty")}</div>}
+              {suggestionsEnabled && !loading && suggestions.length === 0 && <div className="suggestions-state" role="status">{t(suggestionError === "timeout" ? "suggestionsTimeout" : suggestionError ? "suggestionsFailed" : "suggestionsEmpty")}</div>}
               <div className="ai-translation-state" role="status" aria-live="polite">
                 {translationState?.status === "loading" ? <p>{t("aiTranslating")}</p> : null}
                 {translationState?.error ? <p>{t(MODEL_ERROR_MESSAGES[translationState.error])}</p> : null}

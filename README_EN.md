@@ -184,7 +184,7 @@ Besides same-origin pages, assets, and deployment defaults, the built-in configu
 
 * Network time calibration from `time.akamai.com`, which can be replaced with device time in Settings.
 * Hitokoto quotes from `v1.hitokoto.cn`, with a local fallback when the request fails.
-* Suggestions can follow the built-in Baidu, Google, and Bing engines automatically. Added engines need a manual source, which also supports DuckDuckGo and custom APIs. The default connection uses `api.allorigins.win`; both the proxy and suggestion service receive the query. Settings can disable suggestions, use direct requests, or configure another proxy.
+* Suggestions can follow the built-in Baidu, Google, and Bing engines automatically. Added engines need a manual source, which also supports DuckDuckGo and custom APIs. By default, this site's server requests built-in sources, and the browser requests custom APIs directly. The relay and suggestion service receive the query. Settings can disable suggestions or choose another connection; browser-direct requests require CORS support.
 
 Other requests depend on configuration and user actions:
 

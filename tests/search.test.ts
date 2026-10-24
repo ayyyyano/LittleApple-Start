@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { generateSearchUrl, generateTranslationUrl } from "@/lib/search";
-import { buildSuggestionRequestUrl, fetchSearchSuggestions, normalizeSuggestionResponse, resolveSuggestionProvider, suggestionsAllowed } from "@/lib/search-suggestions";
+import { buildSuggestionRequestUrl, fetchSearchSuggestions, normalizeSuggestionResponse, resolveSuggestionProvider, suggestionsAllowed, SUGGESTION_TIMEOUT_MS } from "@/lib/search-suggestions";
 import { cloneDefaultConfig } from "@/lib/default-config";
 import { parseConfigFile, parseCurrentConfig } from "@/lib/config-parser";
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 
 describe("generateSearchUrl", () => {
   it("replaces every supported placeholder", () => {
@@ -111,24 +111,25 @@ describe("search suggestion configuration", () => {
     vi.stubGlobal("fetch", fetchMock);
     const controller = new AbortController();
     expect(await fetchSearchSuggestions("baidu", "", "苹果", bing, controller.signal)).toEqual(["苹果官网", "苹果手机"]);
-    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("allorigins.win"), expect.objectContaining({ signal: controller.signal }));
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/api/search-suggestions?provider=baidu"), expect.objectContaining({ signal: expect.any(AbortSignal) }));
   });
 
   it("propagates cancelled requests and HTTP failures rather than fabricating suggestions", async () => {
     const controller = new AbortController();
     controller.abort();
-    const fetchMock = vi.fn().mockRejectedValueOnce(new DOMException("Aborted", "AbortError")).mockResolvedValueOnce(new Response(null, { status: 503 }));
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 503 }));
     vi.stubGlobal("fetch", fetchMock);
     await expect(fetchSearchSuggestions("baidu", "", "apple", bing, controller.signal)).rejects.toMatchObject({ name: "AbortError" });
+    expect(fetchMock).not.toHaveBeenCalled();
     await expect(fetchSearchSuggestions("baidu", "", "apple", bing, new AbortController().signal)).rejects.toThrow("SUGGESTION_HTTP_503");
   });
 
   it("preserves default routes and explicitly supports direct and custom proxies", () => {
     const direct = buildSuggestionRequestUrl("bing", "", "a & b", bing, "direct")!;
     expect(direct.url).toBe("https://api.bing.com/osjson.aspx?query=a%20%26%20b");
-    expect(buildSuggestionRequestUrl("bing", "", "a & b", bing)?.url).toBe(`https://api.allorigins.win/raw?url=${encodeURIComponent(direct.url)}`);
+    expect(buildSuggestionRequestUrl("bing", "", "a & b", bing)?.url).toBe("/api/search-suggestions?provider=bing&q=a%20%26%20b");
     expect(buildSuggestionRequestUrl("bing", "", "a & b", bing, "custom", "https://proxy.example/?url={url}")?.url).toBe(`https://proxy.example/?url=${encodeURIComponent(direct.url)}`);
-    expect(buildSuggestionRequestUrl("custom", "https://api.example/?q={query}", "x", bing, "allorigins")?.url).toContain("allorigins.win");
+    expect(buildSuggestionRequestUrl("custom", "https://api.example/?q={query}", "x", bing, "allorigins")?.url).toBe("https://api.example/?q=x");
     expect(buildSuggestionRequestUrl("bing", "", "x", bing, "custom", "https://proxy.example/")).toBeNull();
     expect(buildSuggestionRequestUrl("bing", "", "x", bing, "custom", "javascript:{url}")).toBeNull();
     expect(buildSuggestionRequestUrl("custom", "javascript:{query}", "x", bing)).toBeNull();
@@ -143,6 +144,53 @@ describe("search suggestion configuration", () => {
     expect(suggestionsAllowed(true, bing)).toBe(true);
     expect(await fetchSearchSuggestions("bing", "", "hello", engine, new AbortController().signal)).toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("deduplicates case, full-width forms and whitespace without changing the first result", () => {
+    expect(normalizeSuggestionResponse(["apple", ["Apple Music", "apple music", "Ａｐｐｌｅ Music", "Apple  Music", " APPLE ", "apple watch"]], "apple"))
+      .toEqual(["Apple Music", "apple watch"]);
+  });
+
+  it("maps legacy AllOrigins configurations and imports to the default relay", () => {
+    const config = cloneDefaultConfig();
+    config.search.suggestionTransport = "allorigins";
+    expect(parseCurrentConfig(config).search.suggestionTransport).toBe("auto");
+    expect(parseConfigFile(JSON.stringify({ version: 4, config })).config.search.suggestionTransport).toBe("auto");
+    expect(buildSuggestionRequestUrl("bing", "", "apple", bing, "allorigins"))
+      .toEqual(buildSuggestionRequestUrl("bing", "", "apple", bing, "auto"));
+  });
+
+  it("settles and aborts a stalled fetch instead of leaving the popup loading forever", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn().mockImplementation(() => new Promise(() => undefined));
+    vi.stubGlobal("fetch", fetchMock);
+    const result = expect(fetchSearchSuggestions("bing", "", "apple", bing, new AbortController().signal)).rejects.toThrow("SUGGESTION_TIMEOUT");
+    await vi.advanceTimersByTimeAsync(SUGGESTION_TIMEOUT_MS);
+    await result;
+    expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("bounds body reads as well as the initial fetch", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(new ReadableStream({ start() {} }))));
+    const result = expect(fetchSearchSuggestions("bing", "", "apple", bing, new AbortController().signal)).rejects.toThrow("SUGGESTION_TIMEOUT");
+    await vi.advanceTimersByTimeAsync(SUGGESTION_TIMEOUT_MS);
+    await result;
+  });
+
+  it("cancels obsolete requests even if their transport ignores abort", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementationOnce(() => new Promise(() => undefined)).mockResolvedValueOnce(new Response(JSON.stringify(["new", ["new result"]]))));
+    const controller = new AbortController();
+    const oldResult = expect(fetchSearchSuggestions("bing", "", "old", bing, controller.signal)).rejects.toMatchObject({ name: "AbortError" });
+    controller.abort();
+    expect(await fetchSearchSuggestions("bing", "", "new", bing, new AbortController().signal)).toEqual(["new result"]);
+    await oldResult;
+  });
+
+  it.each([new TypeError("Failed to fetch"), new SyntaxError("Invalid JSON")])("rejects network/CORS and JSON failures", async (error) => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(error));
+    await expect(fetchSearchSuggestions("bing", "", "apple", bing, new AbortController().signal)).rejects.toThrow(error);
   });
 
   it("builds configured translation entries", () => {

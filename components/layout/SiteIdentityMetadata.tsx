@@ -32,10 +32,9 @@ function setFaviconHref(links: HTMLLinkElement[], href: string): void {
 export function SiteIdentityMetadata() {
   const { config, assetRevision, deploymentDefaults } = useApp();
   const faviconUrlRef = useRef<string | null>(null);
+  const name = config.siteIdentity.name.trim() || "LittleApple Start";
 
   useEffect(() => {
-    const name = config.siteIdentity.name.trim() || "LittleApple Start";
-    document.title = name;
     document.documentElement.dataset.siteName = name;
     const setMeta = (selector: string, attributes: Record<string, string>) => {
       let meta = document.querySelector<HTMLMetaElement>(selector);
@@ -49,7 +48,7 @@ export function SiteIdentityMetadata() {
     setMeta('meta[name="application-name"]', { name: "application-name" });
     setMeta('meta[property="og:site_name"]', { property: "og:site_name" });
     setMeta('meta[property="og:title"]', { property: "og:title" });
-  }, [config.siteIdentity.name]);
+  }, [name]);
 
   useEffect(() => {
     let active = true;
@@ -93,5 +92,5 @@ export function SiteIdentityMetadata() {
     if (faviconUrlRef.current) URL.revokeObjectURL(faviconUrlRef.current);
   }, []);
 
-  return null;
+  return <title>{name}</title>;
 }

@@ -88,10 +88,9 @@ export function SearchSettings() {
             updateConfig((current) => ({ ...current, search: { ...current.search, suggestionProvider: value as SuggestionProvider } }));
           }} /></label>}
           {config.search.suggestionProvider === "custom" ? <label><span>{t("suggestionApiUrl")}</span><Input value={config.search.suggestionApiUrl} onChange={(event) => updateConfig((current) => ({ ...current, search: { ...current.search, suggestionApiUrl: event.target.value } }))} placeholder="https://example.com/suggest?q={query}" inputMode="url" /><span className="field-hint">{t("suggestionApiHint")}</span></label> : null}
-          <label className="field-label" htmlFor="suggestion-transport"><span>{t("suggestionTransport")}</span><Select id="suggestion-transport" value={config.search.suggestionTransport} options={[
+          <label className="field-label" htmlFor="suggestion-transport"><span>{t("suggestionTransport")}</span><Select id="suggestion-transport" value={config.search.suggestionTransport === "allorigins" ? "auto" : config.search.suggestionTransport} options={[
             { value: "auto", label: t("suggestionTransportAuto") },
             { value: "direct", label: t("suggestionDirect") },
-            { value: "allorigins", label: "AllOrigins" },
             { value: "custom", label: t("suggestionCustomProxy") },
           ]} onValueChange={(value) => updateConfig((current) => ({ ...current, search: { ...current.search, suggestionTransport: value as AppConfig["search"]["suggestionTransport"] } }))} /></label>
           <p className="field-hint">{t("suggestionTransportHint")}</p>

@@ -18,6 +18,11 @@ const BUILT_IN_ENDPOINTS: Record<Exclude<SuggestionProvider, "auto" | "custom">,
   duckduckgo: (query) => `https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`,
 };
 
+export function buildBuiltInSuggestionUrl(provider: string, query: string): string | null {
+  if (!Object.hasOwn(BUILT_IN_ENDPOINTS, provider)) return null;
+  return BUILT_IN_ENDPOINTS[provider as keyof typeof BUILT_IN_ENDPOINTS](query);
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -66,12 +71,12 @@ export function buildSuggestionRequestUrl(
     target = BUILT_IN_ENDPOINTS[resolved](query);
   }
   if (!isSafeHttpUrl(target)) return null;
-  if (transport === "direct" || (transport === "auto" && resolved === "custom")) return { provider: resolved, url: target };
+  if (transport === "direct" || ((transport === "auto" || transport === "allorigins") && resolved === "custom")) return { provider: resolved, url: target };
   if (transport === "custom") {
     if (!proxyTemplate.includes("{url}") || !isSafeHttpUrl(proxyTemplate)) return null;
     return { provider: resolved, url: proxyTemplate.replaceAll("{url}", encodeURIComponent(target)) };
   }
-  return { provider: resolved, url: `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}` };
+  return { provider: resolved, url: `/api/search-suggestions?provider=${resolved}&q=${encodeURIComponent(query)}` };
 }
 
 function collectSuggestionValues(value: unknown, output: string[], depth = 0): void {
@@ -105,8 +110,67 @@ export function normalizeSuggestionResponse(value: unknown, query: string): stri
   const collected: string[] = [];
   if (Array.isArray(value) && typeof value[0] === "string" && Array.isArray(value[1])) collectSuggestionValues(value[1], collected);
   else collectSuggestionValues(value, collected);
-  const normalizedQuery = query.trim().toLocaleLowerCase();
-  return [...new Set(collected)].filter((item) => item.toLocaleLowerCase() !== normalizedQuery).slice(0, 8);
+  const key = (text: string) => text.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
+  const seen = new Set([key(query)]);
+  return collected.filter((item) => {
+    const normalized = key(item);
+    if (seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  }).slice(0, 8);
+}
+
+export const SUGGESTION_TIMEOUT_MS = 6000;
+const MAX_RESPONSE_BYTES = 64 * 1024;
+
+export async function fetchSuggestionJson(url: string, signal: AbortSignal, timeoutMs = SUGGESTION_TIMEOUT_MS, redirect: RequestRedirect = "follow"): Promise<unknown> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let onAbort: () => void = () => undefined;
+  const cancelled = new Promise<never>((_, reject) => {
+    onAbort = () => {
+      controller.abort();
+      reject(new DOMException("Aborted", "AbortError"));
+    };
+    if (signal.aborted) { onAbort(); return; }
+    signal.addEventListener("abort", onAbort, { once: true });
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error("SUGGESTION_TIMEOUT"));
+    }, timeoutMs);
+  });
+  const request = async () => {
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    const response = await fetch(url, { signal: controller.signal, cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer", redirect, headers: { Accept: "application/json" } });
+    if (response.status === 504) throw new Error("SUGGESTION_TIMEOUT");
+    if (!response.ok) throw new Error(`SUGGESTION_HTTP_${response.status}`);
+    if (Number(response.headers.get("content-length")) > MAX_RESPONSE_BYTES) throw new Error("SUGGESTION_RESPONSE_TOO_LARGE");
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("SUGGESTION_INVALID_RESPONSE");
+    const decoder = new TextDecoder();
+    let length = 0;
+    let body = "";
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        length += value.byteLength;
+        if (length > MAX_RESPONSE_BYTES) throw new Error("SUGGESTION_RESPONSE_TOO_LARGE");
+        body += decoder.decode(value, { stream: true });
+      }
+      return JSON.parse(body + decoder.decode()) as unknown;
+    } finally {
+      void reader.cancel().catch(() => undefined);
+      reader.releaseLock();
+    }
+  };
+  try {
+    return await Promise.race([cancelled, request()]);
+  } finally {
+    clearTimeout(timer);
+    signal.removeEventListener("abort", onAbort);
+    controller.abort();
+  }
 }
 
 export async function fetchSearchSuggestions(
@@ -120,7 +184,5 @@ export async function fetchSearchSuggestions(
 ): Promise<string[]> {
   const request = buildSuggestionRequestUrl(provider, customTemplate, query, engine, transport, proxyTemplate);
   if (!request) return [];
-  const response = await fetch(request.url, { signal, cache: "no-store", headers: { Accept: "application/json" } });
-  if (!response.ok) throw new Error(`SUGGESTION_HTTP_${response.status}`);
-  return normalizeSuggestionResponse(await response.json() as unknown, query);
+  return normalizeSuggestionResponse(await fetchSuggestionJson(request.url, signal), query);
 }
