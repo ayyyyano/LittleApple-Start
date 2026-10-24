@@ -29,7 +29,7 @@ export function SearchBox() {
     [config.search.defaultEngineId, config.search.engines],
   );
 
-  const suggestionsEnabled = suggestionsAllowed(config.search.suggestionsEnabled, engine);
+  const suggestionsEnabled = suggestionsAllowed(config.search.suggestionsEnabled, engine, config.search.suggestionProvider);
   const suggestionKey = JSON.stringify([query.trim(), engine?.id, suggestionsEnabled, config.search.suggestionProvider, config.search.suggestionApiUrl, config.search.suggestionTransport, config.search.suggestionProxyUrl]);
   const suggestions = suggestionsEnabled && suggestionState.key === suggestionKey ? suggestionState.items : [];
   const loading = suggestionsEnabled && suggestionState.key === suggestionKey && suggestionState.loading;

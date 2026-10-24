@@ -678,6 +678,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .floating-player-trigger { width: 100%; height: 100%; display: grid; place-items: center; padding: 0; border: 0; color: var(--accent-strong); background: transparent; cursor: pointer; }
 .floating-player-panel { --floating-player-radius: var(--radius-md); position: relative; width: 100%; border-radius: var(--floating-player-radius); opacity: 0; transform: translateY(4px) scale(.985); pointer-events: none; visibility: hidden; transform-origin: bottom left; transition: opacity var(--motion-normal) ease, transform var(--motion-normal) ease, visibility 0s linear var(--motion-normal); }
 .floating-player--right .floating-player-panel { transform-origin: bottom right; }
+.floating-player.is-collapsed .floating-player-panel { position: absolute; inset-inline: 0; bottom: 0; }
 .floating-player.is-expanded .floating-player-panel { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition-delay: 0s; }
 .floating-player-visual { position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; }
 :root:not([data-surface-mode="liquid"]) .floating-player-visual { display: none; }
@@ -686,6 +687,8 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .floating-player-panel .aplayer { margin: 0; overflow: hidden; border: 1px solid var(--surface-border-strong); border-radius: var(--floating-player-radius); color: var(--text); background: color-mix(in srgb, var(--surface-active-strong-color) 94%, transparent); box-shadow: var(--surface-shadow); }
 :root[data-surface-mode="liquid"] .floating-player-panel .aplayer { border-color: transparent; background: transparent; box-shadow: none; }
 .floating-player-panel .aplayer .aplayer-info { border-bottom-color: var(--surface-border-strong); }
+.floating-player-panel .aplayer .aplayer-info .aplayer-music,
+.floating-player-panel .aplayer .aplayer-info .aplayer-lrc { margin-right: 44px; }
 .floating-player-panel .aplayer .aplayer-title { color: var(--text); }
 .floating-player-panel .aplayer .aplayer-author, .floating-player-panel .aplayer .aplayer-time, .floating-player-panel .aplayer .aplayer-list-index, .floating-player-panel .aplayer .aplayer-list-author { color: var(--text-secondary); }
 .floating-player-panel .aplayer .aplayer-icon path { fill: var(--text-secondary); }

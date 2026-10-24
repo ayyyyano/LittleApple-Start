@@ -16,6 +16,24 @@ afterEach(() => {
 });
 
 describe("Meting resolver", () => {
+  it.each([undefined, "", "   "])("defaults an absent or blank server (%s) to netease", (server) => {
+    const url = new URL(buildMetingRequestUrl({ ...baseConfig, server } as MetingConfig));
+    expect(url.searchParams.get("server")).toBe("netease");
+  });
+
+  it("preserves a custom server and still rejects a missing endpoint or identifier", () => {
+    expect(new URL(buildMetingRequestUrl({ ...baseConfig, server: "  custom-provider  " })).searchParams.get("server")).toBe("custom-provider");
+    expect(() => buildMetingRequestUrl({ ...baseConfig, apiBaseUrl: "", server: "" })).toThrow("incomplete");
+    expect(() => buildMetingRequestUrl({ ...baseConfig, value: "", server: "" })).toThrow("incomplete");
+  });
+
+  it("loads tracks when the server field is left blank", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify([{ name: "Song", url: "https://cdn.example.test/song.mp3" }])));
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await resolveMetingTracks({ ...baseConfig, server: " " })).toHaveLength(1);
+    expect(new URL(fetchMock.mock.calls[0][0] as string).searchParams.get("server")).toBe("netease");
+  });
+
   it.each(["song", "playlist", "album", "search", "artist"] as const)("maps %s to the Meting request type", (mode) => {
     const url = new URL(buildMetingRequestUrl({ ...baseConfig, mode }));
     expect(url.searchParams.get("server")).toBe("netease");

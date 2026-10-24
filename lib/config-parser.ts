@@ -3,6 +3,7 @@ import { isLegacyExport, migrateLegacyConfig, migrateV2Config } from "@/lib/conf
 import { isHexColor, isSafeHttpUrl } from "@/lib/validation";
 import { isSafeDeploymentUrl } from "@/lib/deployment-defaults";
 import { parseModelProfiles } from "@/lib/model-api-config";
+import { normalizeMetingServer } from "@/lib/meting-config";
 import type {
   AppConfig,
   APlayerTrack,
@@ -301,7 +302,7 @@ export function parseCurrentConfig(value: unknown): AppConfig {
         const meting = aplayer.meting;
         result.labs.aplayer.meting.enabled = booleanOr(meting.enabled, fallback.labs.aplayer.meting.enabled);
         result.labs.aplayer.meting.apiBaseUrl = safeUrlOr(meting.apiBaseUrl, fallback.labs.aplayer.meting.apiBaseUrl);
-        result.labs.aplayer.meting.server = stringOr(meting.server, fallback.labs.aplayer.meting.server, 40);
+        result.labs.aplayer.meting.server = normalizeMetingServer(stringOr(meting.server, fallback.labs.aplayer.meting.server, 40));
         if (["song", "playlist", "album", "search", "artist"].includes(String(meting.mode))) {
           result.labs.aplayer.meting.mode = meting.mode as MetingMatchMode;
         }

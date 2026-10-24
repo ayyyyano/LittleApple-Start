@@ -1,5 +1,6 @@
 import type { AppConfig } from "@/types/config";
 import { DEFAULT_BACKGROUND } from "@/lib/default-background";
+import { DEFAULT_METING_SERVER } from "@/lib/meting-config";
 
 export const DEFAULT_CONFIG: AppConfig = {
   version: 4,
@@ -106,7 +107,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       enabled: false,
       position: "left",
       source: "manual",
-      meting: { enabled: false, apiBaseUrl: "", server: "", mode: "song", value: "" },
+      meting: { enabled: false, apiBaseUrl: "", server: DEFAULT_METING_SERVER, mode: "song", value: "" },
       playlist: [],
     },
   },

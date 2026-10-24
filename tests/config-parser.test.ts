@@ -3,6 +3,15 @@ import { parseConfigFile, parseCurrentConfig } from "@/lib/config-parser";
 import { cloneDefaultConfig } from "@/lib/default-config";
 
 describe("configuration parser", () => {
+  it.each([undefined, "", "   ", "netease", " custom-provider "])("normalizes Meting server %s on load and import", (server) => {
+    const config = cloneDefaultConfig();
+    expect(config.labs.aplayer.meting.server).toBe("netease");
+    const raw = { ...config, labs: { ...config.labs, aplayer: { ...config.labs.aplayer, meting: { ...config.labs.aplayer.meting, server } } } };
+    const expected = server?.trim() || "netease";
+    expect(parseCurrentConfig(raw).labs.aplayer.meting.server).toBe(expected);
+    expect(parseConfigFile(JSON.stringify({ version: 4, config: raw })).config.labs.aplayer.meting.server).toBe(expected);
+  });
+
   it("migrates and validates version 3 exports", () => {
     const config = cloneDefaultConfig();
     config.quickLinks.push({ id: "docs", title: "Docs", url: "https://example.com", openInNewTab: true });

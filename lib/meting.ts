@@ -1,4 +1,5 @@
 import { isSafeHttpUrl } from "@/lib/validation";
+import { normalizeMetingServer } from "@/lib/meting-config";
 import type { APlayerTrack, MetingConfig } from "@/types/config";
 
 export class MetingResolveError extends Error {
@@ -72,7 +73,7 @@ function normalizeTrack(item: UnknownRecord, index: number): APlayerTrack | unde
 
 export function buildMetingRequestUrl(config: MetingConfig): string {
   const apiBaseUrl = config.apiBaseUrl.trim();
-  const server = config.server.trim();
+  const server = normalizeMetingServer(config.server);
   const value = config.value.trim();
   if (!isSafeHttpUrl(apiBaseUrl) || !server || !value) {
     throw new MetingResolveError("invalid-config", "Meting configuration is incomplete");

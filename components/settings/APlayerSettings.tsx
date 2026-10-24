@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
 import { resolveMetingTracks } from "@/lib/meting";
+import { DEFAULT_METING_SERVER, normalizeMetingServer } from "@/lib/meting-config";
 import { createId } from "@/lib/utils";
 import { isSafeHttpUrl, normalizeHttpUrl } from "@/lib/validation";
 import type { APlayerTrack, MetingMatchMode, MusicSourceMode } from "@/types/config";
@@ -60,7 +61,7 @@ export function APlayerSettings() {
       {player.source === "meting" ? <div className="form-stack form-stack--compact">
         <p className="field-hint">{t("metingExperimental")}</p>
         <label className="field-label" htmlFor="meting-api"><span>{t("metingApi")}</span><Input id="meting-api" value={player.meting.apiBaseUrl} onChange={(event) => updateMeting({ apiBaseUrl: event.target.value })} inputMode="url" placeholder="https://example.com/api.php" /></label>
-        <label className="field-label" htmlFor="meting-server"><span>{t("metingServer")}</span><Input id="meting-server" value={player.meting.server} onChange={(event) => updateMeting({ server: event.target.value })} placeholder="netease" /></label>
+        <label className="field-label" htmlFor="meting-server"><span>{t("metingServer")}</span><Input id="meting-server" value={player.meting.server} onChange={(event) => updateMeting({ server: event.target.value })} onBlur={(event) => updateMeting({ server: normalizeMetingServer(event.target.value) })} placeholder={DEFAULT_METING_SERVER} /></label>
         <label className="field-label" htmlFor="meting-mode"><span>{t("metingMode")}</span><Select id="meting-mode" value={player.meting.mode} options={[{ value: "song", label: t("metingSong") }, { value: "playlist", label: t("metingPlaylist") }, { value: "album", label: t("metingAlbum") }, { value: "search", label: t("metingSearch") }, { value: "artist", label: t("metingArtist") }]} onValueChange={(mode) => updateMeting({ mode: mode as MetingMatchMode })} /></label>
         <label className="field-label" htmlFor="meting-value"><span>{t(`metingValue${player.meting.mode.charAt(0).toUpperCase()}${player.meting.mode.slice(1)}` as "metingValueSong")}</span><Input id="meting-value" value={player.meting.value} onChange={(event) => updateMeting({ value: event.target.value })} /></label>
         <div className="dialog-actions"><Button size="sm" disabled={metingStatus.state === "loading"} onClick={loadMeting}>{metingStatus.state === "ready" ? t("metingRefresh") : t("metingLoad")}</Button>{metingStatus.state === "loading" ? <span className="field-hint">{t("metingLoading")}</span> : null}{metingStatus.state === "ready" ? <span className="field-hint">{t("metingLoaded", { count: metingStatus.count ?? 0 })}</span> : null}{metingStatus.state === "error" ? <span className="inline-error" role="alert">{t("metingLoadError")}</span> : null}</div>

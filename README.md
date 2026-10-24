@@ -101,22 +101,50 @@ favicon 按“用户自定义 Logo、部署 favicon、内置 favicon”的顺序
 
 ### 本地开发与调试
 
-> 推荐使用 Node.js 24。
+安装 [Node.js 24](https://nodejs.org/)，并确认终端可以运行 `node --version` 和 `npm --version`。项目使用 `package.json` 中固定的 pnpm 10.32.0。如果 `pnpm --version` 已输出 `10.32.0`，可跳过 pnpm 安装与 PATH 配置。
+
+#### Windows（PowerShell）
+
+将 pnpm 安装到当前用户目录，无需管理员权限：
+
+```powershell
+npm install --global pnpm@10.32.0 --prefix "$env:APPDATA\npm"
+$env:Path = "$env:APPDATA\npm;$env:Path"
+pnpm --version
+```
+
+第二行对当前终端生效。要让后续终端也能找到 pnpm，打开“编辑账户的环境变量”，在用户变量 `Path` 中新增 `%APPDATA%\npm`。已有此项时跳过，保留其它 PATH 条目。保存后重新打开终端；使用 VS Code 集成终端时需重启 VS Code。
+
+若 PowerShell 提示禁止运行 `.ps1`，可以使用 `npm.cmd` 和 `pnpm.cmd`，例如 `pnpm.cmd install --frozen-lockfile`。无需为此放宽系统执行策略。
+
+#### macOS / Linux（zsh、bash）
+
+将 pnpm 安装到当前用户的 `~/.local`：
 
 ```bash
-corepack enable
+npm install --global pnpm@10.32.0 --prefix "$HOME/.local"
+export PATH="$HOME/.local/bin:$PATH"
+pnpm --version
+```
+
+`export` 对当前终端生效。要持久保存，将下面一行添加到所用 shell 的配置文件：zsh 使用 `~/.zshrc`，bash 使用 `~/.bashrc`；macOS 的 bash 登录 shell 使用 `~/.bash_profile`。
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+保存后重新打开终端。上述安装命令使用用户目录，无需 `sudo`。命令目录规则可参阅 [npm 文档](https://docs.npmjs.com/cli/v11/configuring-npm/folders/)。
+
+#### 安装项目依赖并启动
+
+在仓库根目录执行：
+
+```bash
 pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Windows 下，若 Node.js 安装在 `C:\Program Files\nodejs`，`corepack enable` 可能因权限不足报 `EPERM`，随后也无法识别 `pnpm`。可跳过该步骤，在项目目录直接运行：
-
-```powershell
-corepack pnpm install --frozen-lockfile
-corepack pnpm dev
-```
-
-此方式无需管理员权限。测试、构建和启动命令也可写成 `corepack pnpm test`、`corepack pnpm build`、`corepack pnpm start`；如果 `pnpm` 已可正常运行，继续使用下方命令即可。
+打开 `http://localhost:3000`。项目依赖由 `pnpm-lock.yaml` 锁定，使用 pnpm 安装。
 
 ### 构建与质量检查
 
@@ -156,7 +184,7 @@ pnpm start
 
  * 校准网络时间（获取自 time.akamai.com，可在设置中切换为本机时间）。
  * 获取一言语句（请求自 v1.hitokoto.cn，失败时使用本地预设）。
- * 输入搜索词时获取百度联想词。默认请求经 `api.allorigins.win` 转发，查询内容会发送给代理和建议服务；可在设置中关闭、改为直连或配置其它接口/代理。
+ * 搜索联想词可自动跟随内置百度、Google、Bing；自添加引擎请手动选择来源。手动模式也支持 DuckDuckGo 和自定义 API。默认连接方式经 `api.allorigins.win` 转发，代理和建议服务都会收到搜索词；可关闭联想词、改为直连或配置其它代理。
 
 其它功能按配置和操作发起请求：
 

@@ -101,22 +101,50 @@ Favicon priority is custom user Logo, deployment favicon, then built-in favicon.
 
 ### Local Development and Debugging
 
-> Node.js 24 is recommended.
+Install [Node.js 24](https://nodejs.org/) and check that `node --version` and `npm --version` work in your terminal. The project pins pnpm 10.32.0 in `package.json`. If `pnpm --version` already prints `10.32.0`, skip the pnpm installation and PATH setup.
+
+#### Windows (PowerShell)
+
+Install pnpm in your user directory without administrator privileges:
+
+```powershell
+npm install --global pnpm@10.32.0 --prefix "$env:APPDATA\npm"
+$env:Path = "$env:APPDATA\npm;$env:Path"
+pnpm --version
+```
+
+The second line updates the current terminal. For future terminals, open "Edit environment variables for your account" and add `%APPDATA%\npm` to your user `Path`. Skip this if the entry already exists, and keep the other PATH entries. Open a new terminal after saving. Restart VS Code if you use its integrated terminal.
+
+If PowerShell blocks `.ps1` scripts, use `npm.cmd` and `pnpm.cmd`, for example `pnpm.cmd install --frozen-lockfile`. This works without relaxing the system execution policy.
+
+#### macOS / Linux (zsh, bash)
+
+Install pnpm under your user's `~/.local` directory:
 
 ```bash
-corepack enable
+npm install --global pnpm@10.32.0 --prefix "$HOME/.local"
+export PATH="$HOME/.local/bin:$PATH"
+pnpm --version
+```
+
+The `export` applies to the current terminal. To persist it, add the following line to your shell configuration: `~/.zshrc` for zsh or `~/.bashrc` for bash. For a bash login shell on macOS, use `~/.bash_profile`.
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Open a new terminal after saving. These installation commands use your user directory and require no `sudo`. See the [npm documentation](https://docs.npmjs.com/cli/v11/configuring-npm/folders/) for executable directory conventions.
+
+#### Install Project Dependencies and Start
+
+Run from the repository root:
+
+```bash
 pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-On Windows, if Node.js is installed in `C:\Program Files\nodejs`, `corepack enable` may fail with `EPERM` because it cannot write command shims there. The `pnpm` command may then be unavailable. Skip that step and run these commands from the project directory:
-
-```powershell
-corepack pnpm install --frozen-lockfile
-corepack pnpm dev
-```
-
-This works without administrator privileges. Use the same prefix for tests, builds, and startup: `corepack pnpm test`, `corepack pnpm build`, or `corepack pnpm start`. If `pnpm` already works, use the commands below.
+Open `http://localhost:3000`. Install project dependencies with pnpm using `pnpm-lock.yaml`.
 
 ### Build and Quality Checks
 
@@ -156,7 +184,7 @@ Besides same-origin pages, assets, and deployment defaults, the built-in configu
 
 * Network time calibration from `time.akamai.com`, which can be replaced with device time in Settings.
 * Hitokoto quotes from `v1.hitokoto.cn`, with a local fallback when the request fails.
-* Baidu search suggestions when typing a query. The default transport uses `api.allorigins.win`, so both the proxy and suggestion service receive the query. Settings can disable suggestions, use direct requests, or configure another endpoint or proxy.
+* Suggestions can follow the built-in Baidu, Google, and Bing engines automatically. Added engines need a manual source, which also supports DuckDuckGo and custom APIs. The default connection uses `api.allorigins.win`; both the proxy and suggestion service receive the query. Settings can disable suggestions, use direct requests, or configure another proxy.
 
 Other requests depend on configuration and user actions:
 

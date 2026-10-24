@@ -1,5 +1,8 @@
 export const maintenanceMessages = {
   "zh-CN": {
+    suggestionManual: "手动选择", suggestionManualProvider: "联想词服务",
+    suggestionAutoHint: "跟随内置百度、Google、Bing 搜索引擎；自添加引擎请使用手动来源。",
+    suggestionAutoUnavailable: "当前搜索引擎不支持自动联想词，请切换为手动来源。",
     liveBackdropBlur: "实时背景模糊",
     liveBackdropBlurDescription: "对设置、对话框等大型界面启用实时玻璃模糊。可能显著增加 GPU 与图形合成负载，导致动画卡顿，尤其在高分辨率设备上。仅对 Liquid 主题生效。",
     suggestionTransport: "联想词连接方式", suggestionTransportAuto: "默认", suggestionDirect: "浏览器直连", suggestionCustomProxy: "自定义代理",
@@ -12,6 +15,9 @@ export const maintenanceMessages = {
     cursorHotspotHint: "热点从图片左上角计算，超出实际显示尺寸时会限制在图片内。调整宽度会保持比例；缩放动图使用当前帧。",
   },
   "zh-TW": {
+    suggestionManual: "手動選擇", suggestionManualProvider: "聯想詞服務",
+    suggestionAutoHint: "跟隨內建百度、Google、Bing 搜尋引擎；自行新增的引擎請使用手動來源。",
+    suggestionAutoUnavailable: "目前搜尋引擎不支援自動聯想詞，請切換為手動來源。",
     liveBackdropBlur: "即時背景模糊",
     liveBackdropBlurDescription: "對設定、對話框等大型介面啟用即時玻璃模糊。可能顯著增加 GPU 與圖形合成負載，導致動畫卡頓，尤其在高解析度裝置上。僅對 Liquid 主題生效。",
     suggestionTransport: "聯想詞連線方式", suggestionTransportAuto: "預設", suggestionDirect: "瀏覽器直連", suggestionCustomProxy: "自訂代理",
@@ -24,6 +30,9 @@ export const maintenanceMessages = {
     cursorHotspotHint: "熱點從圖片左上角計算，超出實際顯示尺寸時會限制在圖片內。調整寬度會保持比例；縮放動圖使用目前影格。",
   },
   en: {
+    suggestionManual: "Choose manually", suggestionManualProvider: "Suggestion service",
+    suggestionAutoHint: "Follows built-in Baidu, Google and Bing engines. Use a manual source for added engines.",
+    suggestionAutoUnavailable: "This engine does not support automatic suggestions. Choose a manual source.",
     liveBackdropBlur: "Live background blur",
     liveBackdropBlurDescription: "Enable live glass blur for large surfaces such as Settings and dialogs. This can significantly increase GPU and compositor load and cause animation stutter, especially on high-resolution displays. Applies to Liquid only.",
     suggestionTransport: "Suggestion connection", suggestionTransportAuto: "Default", suggestionDirect: "Browser direct", suggestionCustomProxy: "Custom proxy",

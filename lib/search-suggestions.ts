@@ -1,9 +1,15 @@
 import type { SearchEngine, SuggestionProvider, SuggestionTransport } from "@/types/config";
 import { isSafeHttpUrl } from "@/lib/validation";
 
-export function suggestionsAllowed(enabled: boolean, engine?: SearchEngine): boolean {
-  return enabled && Boolean(engine) && engine?.suggestionsEnabled !== false;
+export function suggestionsAllowed(enabled: boolean, engine?: SearchEngine, provider: SuggestionProvider = "auto"): boolean {
+  return enabled && Boolean(engine) && engine?.suggestionsEnabled !== false && Boolean(engine && resolveSuggestionProvider(provider, engine));
 }
+
+const AUTOMATIC_ENGINE_HOSTS = {
+  baidu: ["baidu.com", "www.baidu.com"],
+  google: ["google.com", "www.google.com"],
+  bing: ["bing.com", "www.bing.com", "cn.bing.com"],
+} as const;
 
 const BUILT_IN_ENDPOINTS: Record<Exclude<SuggestionProvider, "auto" | "custom">, (query: string) => string> = {
   baidu: (query) => `https://www.baidu.com/sugrec?prod=pc&wd=${encodeURIComponent(query)}`,
@@ -29,13 +35,16 @@ export function applySearchQueryTemplate(template: string, query: string): strin
     .replaceAll("{searchTerms}", encoded);
 }
 
-export function resolveSuggestionProvider(provider: SuggestionProvider, engine: SearchEngine): Exclude<SuggestionProvider, "auto"> {
+export function resolveSuggestionProvider(provider: SuggestionProvider, engine: SearchEngine): Exclude<SuggestionProvider, "auto"> | null {
   if (provider !== "auto") return provider;
-  const haystack = `${engine.id} ${engine.name} ${engine.urlTemplate}`.toLocaleLowerCase();
-  if (haystack.includes("google")) return "google";
-  if (haystack.includes("baidu") || haystack.includes("百度")) return "baidu";
-  if (haystack.includes("duckduckgo") || haystack.includes("duck.com")) return "duckduckgo";
-  return "bing";
+  const builtIn = (["baidu", "google", "bing"] as const).find((id) => engine.id === id);
+  if (!builtIn) return null;
+  try {
+    const hostname = new URL(engine.urlTemplate).hostname;
+    return (AUTOMATIC_ENGINE_HOSTS[builtIn] as readonly string[]).includes(hostname) ? builtIn : null;
+  } catch {
+    return null;
+  }
 }
 
 export function buildSuggestionRequestUrl(
@@ -48,6 +57,7 @@ export function buildSuggestionRequestUrl(
 ): { provider: Exclude<SuggestionProvider, "auto">; url: string } | null {
   if (engine.suggestionsEnabled === false) return null;
   const resolved = resolveSuggestionProvider(provider, engine);
+  if (!resolved) return null;
   let target: string;
   if (resolved === "custom") {
     if (!customTemplate || !hasSearchQueryPlaceholder(customTemplate)) return null;
@@ -76,20 +86,24 @@ function collectSuggestionValues(value: unknown, output: string[], depth = 0): v
     return;
   }
   if (!isRecord(value)) return;
+  // Provider envelopes can include both the echoed query (`q`) and a result list.
+  const collectionKeys = ["g", "s", "suggestions", "results", "items", "searchSuggestions", "suggestionGroups", "data"];
+  const collections = collectionKeys.filter((key) => key in value);
+  if (collections.length > 0) {
+    for (const key of collections) collectSuggestionValues(value[key], output, depth + 1);
+    return;
+  }
   for (const key of ["q", "phrase", "displayText", "text", "value", "suggestion"]) {
     if (typeof value[key] === "string") {
       collectSuggestionValues(value[key], output, depth + 1);
       return;
     }
   }
-  for (const key of ["g", "suggestions", "results", "items", "searchSuggestions", "suggestionGroups", "data"]) {
-    if (key in value) collectSuggestionValues(value[key], output, depth + 1);
-  }
 }
 
 export function normalizeSuggestionResponse(value: unknown, query: string): string[] {
   const collected: string[] = [];
-  if (Array.isArray(value) && value.length === 2 && Array.isArray(value[1])) collectSuggestionValues(value[1], collected);
+  if (Array.isArray(value) && typeof value[0] === "string" && Array.isArray(value[1])) collectSuggestionValues(value[1], collected);
   else collectSuggestionValues(value, collected);
   const normalizedQuery = query.trim().toLocaleLowerCase();
   return [...new Set(collected)].filter((item) => item.toLocaleLowerCase() !== normalizedQuery).slice(0, 8);
