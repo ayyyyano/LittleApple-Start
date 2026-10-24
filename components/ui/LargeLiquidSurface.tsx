@@ -4,13 +4,15 @@ import { useLayoutEffect, useRef, useSyncExternalStore, type CSSProperties, type
 import { useApp } from "@/components/providers/AppProvider";
 import { resolveLargeLiquidMode, wallpaperOrigin, type LiquidCapabilities } from "@/lib/wallpaper-paint";
 import { getServerWallpaperPaint, getWallpaperPaint, subscribeWallpaperPaint } from "@/services/wallpaper-paint";
+import { canUseLiquidRenderer, supportsLiquidBackdrop } from "@/lib/theme";
+import { supportsWallpaperFilter, WallpaperLayers } from "@/components/ui/LiquidWallpaper";
 
 const unavailable: LiquidCapabilities = { imageFilter: false, backdrop: false };
 let capabilities: LiquidCapabilities | undefined;
 function getCapabilities() {
   return capabilities ??= {
-    imageFilter: typeof CSS !== "undefined" && typeof ResizeObserver !== "undefined" && CSS.supports("filter", "blur(1px)") && CSS.supports("overflow", "hidden") && CSS.supports("border-radius", "1px") && CSS.supports("translate", "1px"),
-    backdrop: typeof CSS !== "undefined" && (CSS.supports("backdrop-filter", "blur(1px)") || CSS.supports("-webkit-backdrop-filter", "blur(1px)")),
+    imageFilter: supportsWallpaperFilter(),
+    backdrop: supportsLiquidBackdrop(),
   };
 }
 const subscribeCapabilities = () => () => {};
@@ -33,7 +35,8 @@ export function LargeLiquidSurface({ children, className, as: Tag = "div", id, r
   const ref = elementRef ?? ownRef;
   const paint = useSyncExternalStore(subscribeWallpaperPaint, getWallpaperPaint, getServerWallpaperPaint);
   const support = useSyncExternalStore(subscribeCapabilities, getCapabilities, () => unavailable);
-  const mode = resolveLargeLiquidMode(config.labs.liveBackdropBlur, paint, support);
+  const liveEffects = canUseLiquidRenderer(config.appearance.surfaceMode, config.labs.liveBackdropBlur, support.backdrop);
+  const mode = resolveLargeLiquidMode(liveEffects, paint, support);
 
   useLayoutEffect(() => {
     const surface = ref.current;
@@ -73,11 +76,7 @@ export function LargeLiquidSurface({ children, className, as: Tag = "div", id, r
   const blur = "blur(var(--glass-blur)) saturate(1.06)";
   return <Tag ref={ref} id={id} role={role} aria-label={ariaLabel} aria-hidden={ariaHidden} className={`surface surface--liquid liquid-large-surface ${className ?? ""}`} data-liquid-surface-mode={mode} style={{ ...style, background: mode === "live-backdrop" ? "var(--liquid-large-tint)" : "var(--liquid-large-neutral)", backdropFilter: mode === "live-backdrop" ? blur : "none", WebkitBackdropFilter: mode === "live-backdrop" ? blur : "none" }}>
     {mode === "wallpaper-blur" && paint ? <div className="liquid-wallpaper-clip" aria-hidden="true">
-      <div className="liquid-wallpaper-plane" style={{ width: paint.viewport.width, height: paint.viewport.height, backgroundColor: paint.base }}>
-        <div className="liquid-wallpaper-image" style={{ left: paint.media.left - paint.viewport.left, top: paint.media.top - paint.viewport.top, width: paint.media.width, height: paint.media.height, backgroundImage: paint.image, backgroundSize: paint.size, backgroundPosition: paint.position, backgroundRepeat: paint.repeat, backgroundColor: paint.color, filter: paint.filter }} />
-        <div className="liquid-wallpaper-overlay" style={{ backgroundImage: paint.overlay }} />
-        <div className="liquid-wallpaper-scrim" />
-      </div>
+      <WallpaperLayers paint={paint} />
       <div className="liquid-wallpaper-tint" />
     </div> : null}
     {children}

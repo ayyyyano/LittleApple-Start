@@ -1,13 +1,16 @@
 "use client";
 
-import { Component, lazy, Suspense, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { Component, lazy, Suspense, useSyncExternalStore, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { LargeLiquidSurface } from "@/components/ui/LargeLiquidSurface";
+import { LiquidWallpaper } from "@/components/ui/LiquidWallpaper";
 import { useApp } from "@/components/providers/AppProvider";
-import { canUseLiquidRenderer } from "@/lib/theme";
+import { canUseLiquidRenderer, supportsLiquidBackdrop } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import type { SurfaceMode } from "@/types/config";
 
 const LiquidGlass = lazy(() => import("@samasante/liquid-glass").then((module) => ({ default: module.Glass })));
+const subscribeCapabilities = () => () => {};
+const serverBackdropSupport = () => false;
 
 interface SurfaceProps {
   children?: ReactNode;
@@ -26,8 +29,8 @@ interface SurfaceProps {
 }
 
 export const LIQUID_VISUAL_STYLE: Pick<CSSProperties, "backdropFilter" | "WebkitBackdropFilter"> = {
-  backdropFilter: "blur(var(--glass-blur)) saturate(1.06)",
-  WebkitBackdropFilter: "blur(var(--glass-blur)) saturate(1.06)",
+  backdropFilter: "var(--liquid-backdrop-filter, none)",
+  WebkitBackdropFilter: "var(--liquid-backdrop-filter, none)",
 };
 
 interface BoundaryProps { fallback: ReactNode; children: ReactNode }
@@ -43,15 +46,17 @@ class LiquidBoundary extends Component<BoundaryProps, { failed: boolean }> {
 
 export function Surface({ children, className, variant = "auto", as: Tag = "div", id, role, ariaLabel, ariaHidden, style, liquidRenderer = true, large = false, plain = false, elementRef }: SurfaceProps) {
   const { config } = useApp();
+  const backdropSupported = useSyncExternalStore(subscribeCapabilities, supportsLiquidBackdrop, serverBackdropSupport);
   const requestedMode = variant === "auto" ? config.appearance.surfaceMode : variant;
   const mode: SurfaceMode = requestedMode === "glass" || requestedMode === "standard" ? "material" : requestedMode;
   if (mode === "liquid" && large) return <LargeLiquidSurface as={Tag} id={id} role={role} ariaLabel={ariaLabel} ariaHidden={ariaHidden} className={className} style={style} elementRef={elementRef}>{children}</LargeLiquidSurface>;
   if (plain && mode !== "liquid") return <Tag ref={elementRef} id={id} role={role} aria-label={ariaLabel} aria-hidden={ariaHidden} className={className} style={style}>{children}</Tag>;
-  const useTrueLiquid = canUseLiquidRenderer(mode, mode === "liquid", liquidRenderer);
+  const liveEffects = canUseLiquidRenderer(config.appearance.surfaceMode, config.labs.liveBackdropBlur, backdropSupported);
+  const useTrueLiquid = liveEffects && mode === "liquid" && liquidRenderer;
   const fallbackStyle = mode === "liquid" && !useTrueLiquid
-    ? { ...LIQUID_VISUAL_STYLE, ...style }
+    ? { ...LIQUID_VISUAL_STYLE, ...style, ...(!liveEffects ? { backdropFilter: "none", WebkitBackdropFilter: "none" } : {}) }
     : style;
-  const fallback = <Tag ref={elementRef} id={id} role={role} aria-label={ariaLabel} aria-hidden={ariaHidden} style={fallbackStyle} className={cn("surface", `surface--${mode}`, className)}>{children}</Tag>;
+  const fallback = <Tag ref={elementRef} id={id} role={role} aria-label={ariaLabel} aria-hidden={ariaHidden} style={fallbackStyle} className={cn("surface", `surface--${mode}`, className)}>{mode === "liquid" && !liveEffects ? <LiquidWallpaper /> : null}{children}</Tag>;
 
   if (!useTrueLiquid) return fallback;
 

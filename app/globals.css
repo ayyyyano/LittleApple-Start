@@ -280,6 +280,13 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .liquid-wallpaper-overlay, .liquid-wallpaper-scrim, .liquid-wallpaper-tint { position: absolute; inset: 0; }
 .liquid-wallpaper-scrim { background: var(--liquid-wallpaper-scrim); }
 .liquid-wallpaper-tint { background: var(--liquid-large-tint); }
+/* The filtered allocation is only the surface plus a three-sigma kernel gutter.
+   Its unfiltered source retains the shared viewport paint geometry. */
+.liquid-wallpaper-compact { z-index: -1; animation: none; --wallpaper-gutter: calc((var(--glass-blur) + var(--background-blur)) * 3 + 2px); --liquid-wallpaper-scrim: transparent; }
+.liquid-wallpaper-crop { position: absolute; inset: calc(-1 * var(--wallpaper-gutter)); overflow: hidden; filter: blur(var(--glass-blur)) saturate(1.06); }
+.liquid-wallpaper-compact .liquid-wallpaper-plane { left: calc(var(--wallpaper-left, 0px) + var(--wallpaper-gutter)); top: calc(var(--wallpaper-top, 0px) + var(--wallpaper-gutter)); filter: none; }
+.liquid-wallpaper-compact .liquid-wallpaper-tint { background: rgba(246, 248, 249, calc(0.19 + var(--glass-opacity) * 0.17)); }
+:root[data-theme="dark"] .liquid-wallpaper-compact .liquid-wallpaper-tint { background: rgba(27, 32, 37, calc(0.19 + var(--glass-opacity) * 0.17)); }
 @keyframes liquid-wallpaper-in { from { opacity: 0; } }
 
 .glass-surface {
@@ -335,8 +342,28 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 :root[data-surface-mode="material"] .settings-nav { background: var(--material-surface-panel-inner, var(--surface-panel-inner)); }
 :root[data-surface-mode="material"] .setting-group { background: var(--material-surface-panel-inner, var(--surface-panel-inner)); border-color: var(--material-outline-variant, var(--surface-border-strong)); box-shadow: none; }
 .surface--liquid { overflow: visible; isolation: isolate; }
+:root[data-surface-mode="liquid"] {
+  --liquid-backdrop-filter: none;
+  --liquid-action-backdrop-filter: none;
+  --liquid-trigger-backdrop-filter: none;
+  --liquid-empty-backdrop-filter: none;
+  --liquid-popup-backdrop-filter: none;
+  --liquid-overlay-backdrop-filter: none;
+  --liquid-nested-backdrop-filter: none;
+  --liquid-settings-backdrop-filter: none;
+}
+:root[data-surface-mode="liquid"][data-liquid-live-effects="on"] {
+  --liquid-backdrop-filter: blur(var(--glass-blur)) saturate(1.06);
+  --liquid-action-backdrop-filter: blur(12px) saturate(1.2);
+  --liquid-trigger-backdrop-filter: blur(12px);
+  --liquid-empty-backdrop-filter: blur(10px);
+  --liquid-popup-backdrop-filter: blur(18px) saturate(1.06);
+  --liquid-overlay-backdrop-filter: blur(var(--dialog-blur-root));
+  --liquid-nested-backdrop-filter: blur(var(--dialog-blur-nested));
+  --liquid-settings-backdrop-filter: blur(var(--settings-glass-blur)) saturate(1.06);
+}
 :root[data-surface-mode="liquid"] .glass-surface,
-:root[data-surface-mode="liquid"] .surface--liquid { background: var(--liquid-fallback-panel); border-color: var(--liquid-fallback-border); box-shadow: var(--liquid-shadow); backdrop-filter: blur(var(--glass-blur)) saturate(1.06); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06); }
+:root[data-surface-mode="liquid"] .surface--liquid { background: var(--liquid-fallback-panel); border-color: var(--liquid-fallback-border); box-shadow: var(--liquid-shadow); -webkit-backdrop-filter: var(--liquid-backdrop-filter); backdrop-filter: var(--liquid-backdrop-filter); }
 .surface--liquid-shell > .surface--liquid-fallback,
 .surface--liquid-shell > .surface--liquid-renderer { width: 100%; }
 .surface--liquid-shell > .surface--liquid-fallback { border-radius: inherit; }
@@ -354,9 +381,9 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 :root[data-surface-mode="material"] .top-action:hover,
 :root[data-surface-mode="material"] .settings-trigger:hover:not(:disabled) { background: var(--material-surface-control-hover); border-color: var(--material-outline); }
 :root[data-surface-mode="liquid"] .top-action-icon { color: var(--liquid-on-surface, var(--peripheral-fg)); }
-:root[data-surface-mode="liquid"] .top-action { color: var(--liquid-on-surface, var(--peripheral-fg)); backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
+:root[data-surface-mode="liquid"] .top-action { color: var(--liquid-on-surface, var(--peripheral-fg)); -webkit-backdrop-filter: var(--liquid-action-backdrop-filter); backdrop-filter: var(--liquid-action-backdrop-filter); }
 :root[data-surface-mode="liquid"] .top-action:hover { border-color: var(--peripheral-border-hover); background: var(--peripheral-bg-hover); }
-:root[data-surface-mode="liquid"] .settings-trigger { color: var(--peripheral-fg); background: var(--peripheral-bg); border-color: var(--peripheral-border); box-shadow: var(--peripheral-shadow); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+:root[data-surface-mode="liquid"] .settings-trigger { color: var(--peripheral-fg); background: var(--peripheral-bg); border-color: var(--peripheral-border); box-shadow: var(--peripheral-shadow); -webkit-backdrop-filter: var(--liquid-trigger-backdrop-filter); backdrop-filter: var(--liquid-trigger-backdrop-filter); }
 :root[data-surface-mode="liquid"] .settings-trigger:hover:not(:disabled) { border-color: var(--peripheral-border-hover); background: var(--peripheral-bg-hover); }
 :root[data-surface-mode="liquid"] .top-action:focus-visible,
 :root[data-surface-mode="liquid"] .settings-trigger:focus-visible { box-shadow: var(--peripheral-focus-ring); }
@@ -387,10 +414,10 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .search-input-wrap .ui-input { min-width: 0; min-height: calc(var(--search-height) - 12px); padding: 8px 8px 8px 42px; border: 0; border-radius: 14px; background: transparent; box-shadow: none; font-size: 1rem; }
 .search-engine-select { flex: 0 1 122px; width: min(122px, 28%); }
 .search-engine-select .ui-select { min-height: calc(var(--search-height) - 18px); border: 0; background: transparent; font-size: .82rem; font-weight: 650; }
-:root[data-surface-mode="liquid"] .search-engine-select .ui-select { border: 1px solid var(--liquid-fallback-border); background: var(--liquid-fallback-control); backdrop-filter: blur(var(--glass-blur)) saturate(1.06); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06); }
+:root[data-surface-mode="liquid"] .search-engine-select .ui-select { border: 1px solid var(--liquid-fallback-border); background: var(--liquid-fallback-control); -webkit-backdrop-filter: var(--liquid-backdrop-filter); backdrop-filter: var(--liquid-backdrop-filter); }
 .search-submit { flex: 0 0 auto; color: var(--on-accent); border-radius: 14px; }
 .search-suggestions { position: absolute; top: calc(100% + 10px); left: 0; right: 0; padding: 7px; border: 1px solid var(--surface-border-strong); border-radius: 15px; background: var(--surface-panel-strong); box-shadow: var(--surface-shadow); overflow: hidden; }
-:root[data-surface-mode="liquid"] .search-suggestions { background: var(--liquid-fallback-panel); border-color: var(--liquid-fallback-border); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06); backdrop-filter: blur(var(--glass-blur)) saturate(1.06); }
+:root[data-surface-mode="liquid"] .search-suggestions { background: var(--liquid-fallback-panel); border-color: var(--liquid-fallback-border); -webkit-backdrop-filter: var(--liquid-backdrop-filter); backdrop-filter: var(--liquid-backdrop-filter); }
 .search-suggestions button { width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 8px 11px; border: 0; border-radius: 9px; background: transparent; text-align: left; cursor: pointer; }
 .search-suggestions button:hover { background: var(--state-hover-bg); color: var(--state-hover-fg); }
 .search-suggestions button[aria-selected="true"] { background: var(--state-selected-bg); color: var(--state-selected-fg); }
@@ -408,7 +435,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .quick-links-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(78px, var(--quick-card-width), 150px), 1fr)); column-gap: var(--quick-gap-x); row-gap: var(--quick-gap-y); }
 .quick-link { position: relative; min-width: 0; min-height: var(--quick-card-height); border: 0; border-radius: 16px; background: transparent; transform: none; }
 .quick-link-backdrop { position: absolute; inset: 0; z-index: 0; border: 1px solid var(--surface-border); border-radius: inherit; background: var(--surface-panel); box-shadow: var(--surface-shadow); pointer-events: none; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease; }
-:root[data-surface-mode="liquid"] .quick-link-backdrop { border-color: var(--liquid-fallback-border); background: var(--liquid-fallback-panel); box-shadow: var(--liquid-card-shadow); backdrop-filter: blur(var(--glass-blur)) saturate(1.06); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06); }
+:root[data-surface-mode="liquid"] .quick-link-backdrop { border-color: var(--liquid-fallback-border); background: var(--liquid-fallback-panel); box-shadow: var(--liquid-card-shadow); -webkit-backdrop-filter: var(--liquid-backdrop-filter); backdrop-filter: var(--liquid-backdrop-filter); }
 .quick-link-content { position: relative; z-index: 1; height: 100%; min-height: var(--quick-card-height); animation: quick-link-content-in var(--motion-medium) ease-out; }
 .quick-link:hover .quick-link-backdrop { border-color: color-mix(in srgb, var(--accent) 52%, transparent); background: var(--state-hover-bg); }
 :root[data-surface-mode="material"] .quick-link:hover .quick-link-backdrop { border-color: var(--material-outline); background: var(--material-surface-control-hover); box-shadow: var(--material-shadow); }
@@ -450,7 +477,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .empty-state { min-height: 112px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 12px; color: white; text-shadow: 0 2px 14px rgb(0 0 0 / .62); }
 .empty-state p { max-width: 360px; margin: 5px 0 0; color: inherit; font-size: .93rem; }
 .empty-add { width: 44px; height: 44px; display: grid; place-items: center; margin-bottom: 8px; border: 1px solid var(--surface-border); border-radius: 14px; color: var(--text); background: var(--surface-control); box-shadow: var(--surface-shadow); cursor: pointer; transition: translate var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
-:root[data-surface-mode="liquid"] .empty-add { color: white; background: rgb(5 20 38 / .22); border-color: rgb(255 255 255 / .28); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+:root[data-surface-mode="liquid"] .empty-add { color: white; background: rgb(5 20 38 / .22); border-color: rgb(255 255 255 / .28); -webkit-backdrop-filter: var(--liquid-empty-backdrop-filter); backdrop-filter: var(--liquid-empty-backdrop-filter); }
 .empty-add:hover { translate: 0 -1px; border-color: color-mix(in srgb, var(--accent) 66%, white); background: color-mix(in srgb, var(--accent) 24%, rgb(5 20 38 / .28)); }
 :root[data-surface-mode="liquid"] .empty-add:hover { border-color: var(--liquid-border-strong); background: var(--liquid-surface-control-hover); }
 
@@ -483,7 +510,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .ui-select > svg { flex: 0 0 auto; color: var(--text-secondary); transition: rotate var(--motion-fast) ease; }
 .ui-select[aria-expanded="true"] > svg { rotate: 180deg; }
 .ui-select-list { position: fixed; z-index: 260; overflow: auto; padding: 6px; border: 1px solid var(--surface-border-strong); border-radius: 12px; color: var(--text); background: var(--surface-panel-strong); box-shadow: var(--surface-shadow); animation: select-in var(--motion-fast) ease-out; transition: opacity var(--motion-fast) ease, translate var(--motion-fast) ease, scale var(--motion-fast) ease; }
-:root[data-surface-mode="liquid"] .ui-select-list { background: var(--liquid-fallback-popup); border-color: var(--liquid-fallback-border-strong); backdrop-filter: blur(18px) saturate(1.06); -webkit-backdrop-filter: blur(18px) saturate(1.06); }
+:root[data-surface-mode="liquid"] .ui-select-list { background: var(--liquid-fallback-popup); border-color: var(--liquid-fallback-border-strong); -webkit-backdrop-filter: var(--liquid-popup-backdrop-filter); backdrop-filter: var(--liquid-popup-backdrop-filter); }
 :root[data-surface-mode="liquid"] .ui-select-list button.is-active { background: var(--liquid-fallback-state-hover); }
 :root[data-surface-mode="liquid"] .ui-select-list button[aria-selected="true"],
 :root[data-surface-mode="liquid"] .ui-select-list button[aria-selected="true"].is-active { background: var(--liquid-fallback-state-selected); }
@@ -519,9 +546,9 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .dialog-layer { position: fixed; inset: 0; z-index: var(--dialog-z-root); display: grid; place-items: center; padding: 18px; background: var(--dialog-overlay-root); transition: opacity var(--motion-fast) ease; }
 .dialog-layer--exiting { opacity: 0; pointer-events: none; }
 .dialog-layer--nested, .dialog-layer .dialog-layer { z-index: var(--dialog-z-nested); background: var(--dialog-overlay-nested); }
-:root[data-surface-mode="liquid"] .dialog-layer { backdrop-filter: blur(var(--dialog-blur-root)); -webkit-backdrop-filter: blur(var(--dialog-blur-root)); }
+:root[data-surface-mode="liquid"] .dialog-layer { -webkit-backdrop-filter: var(--liquid-overlay-backdrop-filter); backdrop-filter: var(--liquid-overlay-backdrop-filter); }
 :root[data-surface-mode="liquid"] .dialog-layer--nested,
-:root[data-surface-mode="liquid"] .dialog-layer .dialog-layer { backdrop-filter: blur(var(--dialog-blur-nested)); -webkit-backdrop-filter: blur(var(--dialog-blur-nested)); }
+:root[data-surface-mode="liquid"] .dialog-layer .dialog-layer { -webkit-backdrop-filter: var(--liquid-nested-backdrop-filter); backdrop-filter: var(--liquid-nested-backdrop-filter); }
 .dialog-surface { width: min(520px, 100%); max-height: min(86dvh, 760px); border-radius: 22px; overflow: hidden; box-shadow: var(--dialog-shadow-root); }
 .dialog-layer--nested .dialog-surface { box-shadow: var(--dialog-shadow-nested); }
 :root[data-surface-mode="liquid"] .dialog-layer--nested .dialog-surface { box-shadow: var(--dialog-shadow-nested); }
@@ -538,7 +565,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 @keyframes dialog-in { from { opacity: 0; transform: translateY(10px) scale(.985); } }
 
 .dialog-surface:has(.settings-dialog) { width: min(980px, calc(100vw - 36px)); max-height: min(760px, calc(100dvh - 36px)); }
-:root[data-surface-mode="liquid"] .dialog-surface:has(.settings-dialog) { background: var(--liquid-fallback-settings); backdrop-filter: blur(var(--settings-glass-blur)) saturate(1.06); -webkit-backdrop-filter: blur(var(--settings-glass-blur)) saturate(1.06); }
+:root[data-surface-mode="liquid"] .dialog-surface:has(.settings-dialog) { background: var(--liquid-fallback-settings); -webkit-backdrop-filter: var(--liquid-settings-backdrop-filter); backdrop-filter: var(--liquid-settings-backdrop-filter); }
 :root[data-surface-mode="liquid"] .dialog-surface.surface--liquid .dialog-content { background: transparent; }
 :root[data-surface-mode="liquid"] .dialog-surface.surface--liquid > .surface--liquid-renderer > [data-lg-layer] { border-radius: inherit; clip-path: inset(0 round 22px); contain: paint; isolation: isolate; pointer-events: none; }
 .settings-dialog { width: 100%; height: min(760px, calc(100dvh - 36px)); padding: 0; overflow: hidden; }
@@ -885,3 +912,37 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
   :root[data-surface-mode="liquid"] .quick-link-menu,
   :root[data-surface-mode="liquid"] .ui-select-list { background: var(--liquid-fallback-popup); }
 }
+
+/* Small Liquid surfaces use readable neutral materials while live sampling is off. */
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .surface--liquid:not(.liquid-large-surface),
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .glass-surface,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .quick-link-backdrop,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .top-action,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .settings-trigger,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .search-engine-select .ui-select,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .empty-add {
+  background: var(--liquid-fallback-panel-strong);
+  color: var(--liquid-on-surface, var(--text));
+}
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .quick-link:hover .quick-link-backdrop,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .quick-link--add:hover .quick-link-backdrop,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .top-action:hover,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .settings-trigger:hover:not(:disabled) {
+  background: var(--liquid-fallback-control-hover);
+}
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .surface--liquid.search-suggestions,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .quick-link-menu,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .ui-select-list:not(.liquid-large-surface) {
+  background: var(--liquid-fallback-popup);
+}
+
+/* Keep the Neutral base behind the opaque wallpaper source. Removing a failed
+   source must not animate the shell from transparent back to readable. */
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) [data-liquid-wallpaper],
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .surface--liquid[data-liquid-wallpaper] {
+  isolation: isolate;
+}
+:where([data-liquid-wallpaper]) { position: relative; }
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .quick-link:hover .quick-link-backdrop[data-liquid-wallpaper],
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .top-action[data-liquid-wallpaper]:hover,
+:root[data-surface-mode="liquid"]:not([data-liquid-live-effects="on"]) .settings-trigger[data-liquid-wallpaper]:hover:not(:disabled) { background: rgba(127, 127, 127, 0.10); }

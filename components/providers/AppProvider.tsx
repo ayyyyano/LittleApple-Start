@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { translate, type MessageKey } from "@/i18n/resources";
 import { applyDeploymentDefaults, type DeploymentDefaults } from "@/lib/deployment-defaults";
 import { cloneDefaultConfig } from "@/lib/default-config";
@@ -13,6 +13,7 @@ import { ToastViewport, type ToastItem } from "@/components/ui/Toast";
 import { SakuraEffect } from "@/components/effects/SakuraEffect";
 import { createModelCredentialStore } from "@/lib/model-credentials";
 import { surfaceOpacityProfile } from "@/lib/surface-opacity";
+import { canUseLiquidRenderer, supportsLiquidBackdrop } from "@/lib/theme";
 
 interface AppContextValue {
   config: AppConfig;
@@ -217,6 +218,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.dataset.motion = config.general.motionEnabled ? "on" : "off";
   }, [config.general.motionEnabled]);
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.dataset.liquidLiveEffects = canUseLiquidRenderer(config.appearance.surfaceMode, config.labs.liveBackdropBlur, supportsLiquidBackdrop()) ? "on" : "off";
+    return () => { delete root.dataset.liquidLiveEffects; };
+  }, [config.appearance.surfaceMode, config.labs.liveBackdropBlur]);
 
   useEffect(() => {
     const root = document.documentElement;

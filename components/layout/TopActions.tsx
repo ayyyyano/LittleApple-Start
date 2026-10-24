@@ -6,6 +6,7 @@ import { isMaterialIconName } from "@/lib/icons";
 import { useApp } from "@/components/providers/AppProvider";
 import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { LiquidWallpaper } from "@/components/ui/LiquidWallpaper";
 import { isSafeHttpUrl } from "@/lib/validation";
 
 export function TopActions({ onOpenSettings }: { onOpenSettings: () => void }) {
@@ -20,6 +21,7 @@ export function TopActions({ onOpenSettings }: { onOpenSettings: () => void }) {
           target={action.openInNewTab ? "_blank" : undefined}
           rel={action.openInNewTab ? "noopener noreferrer" : undefined}
         >
+          {config.appearance.surfaceMode === "liquid" ? <LiquidWallpaper /> : null}
           <span className="top-action-icon">{action.iconProvider === "material" && isMaterialIconName(action.icon)
             ? <AppIcon name={action.icon ?? "link"} provider={action.iconProvider} size={18} />
             : <FeatherActionIcon name={action.icon} size={18} />}</span>
@@ -28,6 +30,7 @@ export function TopActions({ onOpenSettings }: { onOpenSettings: () => void }) {
       ))}
       <Tooltip label={t("settings")}>
         <Button className="settings-trigger" variant="secondary" size="icon" aria-label={t("settings")} onClick={onOpenSettings}>
+          {config.appearance.surfaceMode === "liquid" ? <LiquidWallpaper /> : null}
           <AppIcon name="settings" size={19} />
         </Button>
       </Tooltip>

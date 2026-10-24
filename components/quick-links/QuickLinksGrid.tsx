@@ -15,6 +15,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { AppIcon } from "@/components/ui/AppIcon";
 import { Button } from "@/components/ui/Button";
 import { LIQUID_VISUAL_STYLE } from "@/components/ui/Surface";
+import { LiquidWallpaper } from "@/components/ui/LiquidWallpaper";
 import { useApp } from "@/components/providers/AppProvider";
 import { QuickLinkEditor } from "@/components/quick-links/QuickLinkEditor";
 import { LinkIcon } from "@/components/links/LinkIcon";
@@ -80,7 +81,7 @@ function SortableQuickLink({
 
   return (
     <div ref={setNodeRef} style={style} className={`quick-link ${isDragging ? "is-dragging" : ""}`} onContextMenu={handleContextMenu}>
-      <span aria-hidden="true" className="quick-link-backdrop" style={visualStyle} />
+      <span aria-hidden="true" className="quick-link-backdrop" style={visualStyle}>{config.appearance.surfaceMode === "liquid" ? <LiquidWallpaper /> : null}</span>
       <div className="quick-link-content">
         <button className="drag-handle" type="button" aria-label={`${draggingLabel}: ${link.title}`} {...attributes} {...listeners}><AppIcon name="drag" size={16} /></button>
         <a href={isSafeHttpUrl(link.url) ? link.url : "#"} target={link.openInNewTab ? "_blank" : undefined} rel={link.openInNewTab ? "noopener noreferrer" : undefined}>
@@ -163,7 +164,7 @@ export function QuickLinksGrid() {
                 />
               ))}
               <button className="quick-link quick-link--add" type="button" onClick={() => { setOpenActionsId(null); setEditing(undefined); setEditorOpen(true); }}>
-                <span aria-hidden="true" className="quick-link-backdrop" style={config.appearance.surfaceMode === "liquid" ? LIQUID_VISUAL_STYLE : undefined} />
+                <span aria-hidden="true" className="quick-link-backdrop" style={config.appearance.surfaceMode === "liquid" ? LIQUID_VISUAL_STYLE : undefined}>{config.appearance.surfaceMode === "liquid" ? <LiquidWallpaper /> : null}</span>
                 <span className="quick-link-content quick-link-add-content"><AppIcon name="add" size={24} /><span>{t("addQuickLink")}</span></span>
               </button>
             </div>

@@ -46,7 +46,7 @@ describe("theme surface controls", () => {
     expect(search).toContain('<Surface plain liquidRenderer={false} className="search-suggestions">');
     expect(search).not.toContain('<Surface large plain liquidRenderer={false} className="search-suggestions">');
     expect(css).toMatch(/\[data-surface-mode="liquid"\] \.search-suggestions,\s*:root\[data-surface-mode="liquid"\] \.quick-link-backdrop \{ background: var\(--liquid-surface-panel/);
-    expect(css).toMatch(/\.search-suggestions \{[^}]*backdrop-filter: blur\(var\(--glass-blur\)\) saturate\(1.06\)/);
+    expect(css).toMatch(/\.search-suggestions \{[^}]*backdrop-filter: var\(--liquid-backdrop-filter\)/);
   });
 
   it("keeps solid readable bases when a browser cannot parse color-mix", () => {
