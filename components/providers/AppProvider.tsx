@@ -12,6 +12,7 @@ import type { AppConfig } from "@/types/config";
 import { ToastViewport, type ToastItem } from "@/components/ui/Toast";
 import { SakuraEffect } from "@/components/effects/SakuraEffect";
 import { createModelCredentialStore } from "@/lib/model-credentials";
+import { surfaceOpacityProfile } from "@/lib/surface-opacity";
 
 interface AppContextValue {
   config: AppConfig;
@@ -177,8 +178,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       // Simple keeps interaction states neutral; accent is reserved for explicit
       // primary actions rather than being used as a glass-like selected fill.
-      root.style.setProperty("--minimal-surface-selected", tokens.surfaceElevated);
-      root.style.setProperty("--minimal-surface-hover", tokens.surface);
+      root.style.setProperty("--minimal-surface-selected", "var(--minimal-surface-panel-strong)");
+      root.style.setProperty("--minimal-surface-hover", "var(--minimal-surface-control-hover)");
       root.style.setProperty("--minimal-surface-color", tokens.surface);
       root.style.setProperty("--minimal-surface-strong-color", tokens.surfaceElevated);
       root.style.setProperty("--minimal-surface-glass-color", tokens.surfaceGlass);
@@ -239,7 +240,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       panelStrong: 0.24 + userOpacity * 0.16,
       panelInner: 0.08 + userOpacity * 0.08,
     };
-    const minimalProfile = { control: 0.9, controlHover: 0.96, panel: 0.94, panelStrong: 0.96, panelInner: 0.9 };
+    const opacityProfile = surfaceOpacityProfile(config.appearance.glassOpacity);
     const surfaceMix = (color: string, alpha: number) => `color-mix(in srgb, ${color} ${Math.round(alpha * 100)}%, transparent)`;
     const setProfile = (
       prefix: "material" | "standard" | "liquid" | "minimal",
@@ -258,13 +259,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       strong: "var(--standard-surface-strong-color)",
       glass: "var(--standard-surface-glass-color)",
     }, standardProfile);
-    // Material owns opaque tonal containers. Unlike Liquid, its surfaces do
-    // not derive their identity from wallpaper transparency or backdrop blur.
-    root.style.setProperty("--material-surface-control", "var(--material-surface-container)");
-    root.style.setProperty("--material-surface-control-hover", "color-mix(in srgb, var(--material-primary) 10%, var(--material-surface-container))");
-    root.style.setProperty("--material-surface-panel", "var(--material-surface-container)");
-    root.style.setProperty("--material-surface-panel-strong", "var(--material-surface-container-high)");
-    root.style.setProperty("--material-surface-panel-inner", "var(--material-surface-container-low)");
+    setProfile("material", {
+      surface: "var(--material-surface-container-low)",
+      strong: "var(--material-surface-container-high)",
+      glass: "var(--material-surface-container)",
+    }, opacityProfile);
+    root.style.setProperty("--material-surface-control-hover", surfaceMix("color-mix(in srgb, var(--material-primary) 10%, var(--material-surface-container))", opacityProfile.controlHover));
     setProfile("liquid", {
       surface: "var(--liquid-surface-color)",
       strong: "var(--liquid-surface-strong-color)",
@@ -274,7 +274,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       surface: "var(--standard-surface-color)",
       strong: "var(--standard-surface-strong-color)",
       glass: "var(--standard-surface-glass-color)",
-    }, minimalProfile);
+    }, opacityProfile);
 
     const activePrefix = config.appearance.surfaceMode === "liquid"
       ? "liquid"

@@ -270,7 +270,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .liquid-large-surface.dialog-surface { --liquid-wallpaper-scrim: var(--dialog-overlay-root); }
 .liquid-large-surface.dialog-surface--nested { --liquid-wallpaper-scrim: var(--dialog-overlay-nested); }
 .liquid-large-surface.dialog-surface:has(.settings-dialog) { --liquid-large-tint: var(--liquid-fallback-settings); }
-.liquid-large-surface.ui-select-list, .liquid-large-surface.search-suggestions { --liquid-large-tint: var(--liquid-fallback-popup); }
+.liquid-large-surface.ui-select-list { --liquid-large-tint: var(--liquid-fallback-popup); }
 .liquid-large-surface > :not(.liquid-wallpaper-clip) { position: relative; z-index: 1; }
 .liquid-wallpaper-clip { position: absolute; inset: 0; translate: var(--wallpaper-scroll-left, 0px) var(--wallpaper-scroll-top, 0px); z-index: 0; overflow: hidden; border-radius: inherit; pointer-events: none; animation: liquid-wallpaper-in var(--motion-fast) ease-out; }
 .liquid-wallpaper-plane { position: absolute; left: var(--wallpaper-left, 0px); top: var(--wallpaper-top, 0px); transform: scale(var(--wallpaper-scale-x, 1), var(--wallpaper-scale-y, 1)); transform-origin: 0 0; filter: blur(var(--glass-blur)) saturate(1.06); }
@@ -294,42 +294,46 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
   box-shadow: var(--surface-shadow);
   transition: color var(--motion-medium) ease, background-color var(--motion-medium) ease, border-color var(--motion-medium) ease, box-shadow var(--motion-medium) ease;
 }
-.surface--minimal { background: var(--surface-panel-strong); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 12px 36px rgb(6 28 54 / .14); }
-.surface--material, .surface--glass { background: var(--material-surface-container, var(--surface-panel)); border-color: var(--material-outline-variant, var(--surface-border)); box-shadow: var(--material-shadow, var(--surface-shadow)); backdrop-filter: none; -webkit-backdrop-filter: none; }
-:root[data-surface-mode="minimal"] .quick-link-backdrop { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--minimal-surface-panel-strong, var(--surface-panel-strong)); border-color: var(--minimal-border, var(--surface-border)); box-shadow: 0 10px 28px rgb(6 28 54 / .12); }
-:root[data-surface-mode="material"] .quick-link-backdrop { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--material-surface-container, var(--surface-panel)); border-color: var(--material-outline-variant, var(--surface-border)); box-shadow: var(--material-shadow, var(--surface-shadow)); }
+.surface--minimal { background: var(--surface-panel-strong); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur)); box-shadow: 0 12px 36px rgb(6 28 54 / .14); }
+.surface--material, .surface--glass { background: var(--material-surface-panel, var(--surface-panel)); border-color: var(--material-outline-variant, var(--surface-border)); box-shadow: var(--material-shadow, var(--surface-shadow)); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur)); }
+:root[data-surface-mode="minimal"] .quick-link-backdrop { -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur)); background: var(--minimal-surface-panel-strong, var(--surface-panel-strong)); border-color: var(--minimal-border, var(--surface-border)); box-shadow: 0 10px 28px rgb(6 28 54 / .12); }
+:root[data-surface-mode="material"] .quick-link-backdrop { -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur)); background: var(--material-surface-panel, var(--surface-panel)); border-color: var(--material-outline-variant, var(--surface-border)); box-shadow: var(--material-shadow, var(--surface-shadow)); }
 :root[data-surface-mode="minimal"] .glass-surface,
 :root[data-surface-mode="minimal"] .top-action,
 :root[data-surface-mode="minimal"] .settings-trigger,
 :root[data-surface-mode="minimal"] .search-suggestions,
 :root[data-surface-mode="minimal"] .ui-select-list,
-:root[data-surface-mode="minimal"] .dialog-layer,
+:root[data-surface-mode="minimal"] .quick-link-menu,
+:root[data-surface-mode="minimal"] .floating-player-panel .aplayer,
 :root[data-surface-mode="material"] .glass-surface,
 :root[data-surface-mode="material"] .top-action,
 :root[data-surface-mode="material"] .settings-trigger,
 :root[data-surface-mode="material"] .search-suggestions,
 :root[data-surface-mode="material"] .ui-select-list,
-:root[data-surface-mode="material"] .dialog-layer { backdrop-filter: none; -webkit-backdrop-filter: none; }
+:root[data-surface-mode="material"] .floating-player-panel .aplayer,
+:root[data-surface-mode="material"] .quick-link-menu { -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur)); }
 :root[data-surface-mode="minimal"] .glass-surface,
 :root[data-surface-mode="minimal"] .top-action,
 :root[data-surface-mode="minimal"] .settings-trigger { background: var(--minimal-surface-panel-strong, var(--surface-panel-strong)); border-color: var(--minimal-border, var(--surface-border)); box-shadow: 0 10px 28px rgb(6 28 54 / .12); }
 :root[data-surface-mode="material"] .glass-surface,
 :root[data-surface-mode="material"] .top-action,
-:root[data-surface-mode="material"] .settings-trigger { background: var(--material-surface-container, var(--surface-panel)); border-color: var(--material-outline, var(--surface-border)); box-shadow: var(--material-shadow, var(--surface-shadow)); }
+:root[data-surface-mode="material"] .settings-trigger { background: var(--material-surface-panel, var(--surface-panel)); border-color: var(--material-outline, var(--surface-border)); box-shadow: var(--material-shadow, var(--surface-shadow)); }
 :root[data-surface-mode="material"] .glass-surface,
 :root[data-surface-mode="material"] .top-action,
 :root[data-surface-mode="material"] .settings-trigger,
 :root[data-surface-mode="material"] .surface--material {
-  background: var(--material-surface-container, var(--surface-panel));
+  background: var(--material-surface-panel, var(--surface-panel));
   border-color: var(--material-outline-variant, var(--surface-border));
   box-shadow: var(--material-shadow, var(--surface-shadow));
 }
-:root[data-surface-mode="minimal"] .dialog-content { background: var(--minimal-surface-panel-strong, var(--surface-panel-strong)); }
-:root[data-surface-mode="material"] .dialog-content { background: var(--material-surface-container-high, var(--surface-panel-strong)); }
+:root[data-surface-mode="minimal"] .dialog-surface { background: var(--minimal-surface-panel-strong, var(--surface-panel-strong)); }
+:root[data-surface-mode="material"] .dialog-surface { background: var(--material-surface-panel-strong, var(--surface-panel-strong)); }
+:root[data-surface-mode="minimal"] .dialog-content,
+:root[data-surface-mode="material"] .dialog-content { background: transparent; }
 :root[data-surface-mode="minimal"] .settings-nav,
 :root[data-surface-mode="minimal"] .setting-group { background: var(--minimal-surface-panel-inner, var(--surface-panel-inner)); }
-:root[data-surface-mode="material"] .settings-nav { background: var(--material-surface-container, var(--surface-panel)); }
-:root[data-surface-mode="material"] .setting-group { background: var(--material-surface-container-low, var(--surface-panel-inner)); border-color: var(--material-outline-variant, var(--surface-border-strong)); box-shadow: none; }
+:root[data-surface-mode="material"] .settings-nav { background: var(--material-surface-panel-inner, var(--surface-panel-inner)); }
+:root[data-surface-mode="material"] .setting-group { background: var(--material-surface-panel-inner, var(--surface-panel-inner)); border-color: var(--material-outline-variant, var(--surface-border-strong)); box-shadow: none; }
 .surface--liquid { overflow: visible; isolation: isolate; }
 :root[data-surface-mode="liquid"] .glass-surface,
 :root[data-surface-mode="liquid"] .surface--liquid { background: var(--liquid-fallback-panel); border-color: var(--liquid-fallback-border); box-shadow: var(--liquid-shadow); backdrop-filter: blur(var(--glass-blur)) saturate(1.06); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06); }
@@ -346,7 +350,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 .settings-trigger { width: 40px; min-height: 40px; border-radius: 12px; border-color: var(--surface-border); background: var(--surface-control); box-shadow: var(--surface-shadow); }
 .settings-trigger:hover:not(:disabled) { border-color: var(--accent); background: var(--state-hover-bg); }
 :root[data-surface-mode="material"] .top-action,
-:root[data-surface-mode="material"] .settings-trigger { background: var(--material-surface-control); border-color: var(--material-outline-variant); box-shadow: var(--material-shadow); backdrop-filter: none; -webkit-backdrop-filter: none; }
+:root[data-surface-mode="material"] .settings-trigger { background: var(--material-surface-control); border-color: var(--material-outline-variant); box-shadow: var(--material-shadow); }
 :root[data-surface-mode="material"] .top-action:hover,
 :root[data-surface-mode="material"] .settings-trigger:hover:not(:disabled) { background: var(--material-surface-control-hover); border-color: var(--material-outline); }
 :root[data-surface-mode="liquid"] .top-action-icon { color: var(--liquid-on-surface, var(--peripheral-fg)); }
@@ -386,7 +390,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 :root[data-surface-mode="liquid"] .search-engine-select .ui-select { border: 1px solid var(--liquid-fallback-border); background: var(--liquid-fallback-control); backdrop-filter: blur(var(--glass-blur)) saturate(1.06); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06); }
 .search-submit { flex: 0 0 auto; color: var(--on-accent); border-radius: 14px; }
 .search-suggestions { position: absolute; top: calc(100% + 10px); left: 0; right: 0; padding: 7px; border: 1px solid var(--surface-border-strong); border-radius: 15px; background: var(--surface-panel-strong); box-shadow: var(--surface-shadow); overflow: hidden; }
-:root[data-surface-mode="liquid"] .search-suggestions { background: var(--liquid-fallback-popup); border-color: var(--liquid-fallback-border-strong); backdrop-filter: blur(20px) saturate(1.06); -webkit-backdrop-filter: blur(20px) saturate(1.06); }
+:root[data-surface-mode="liquid"] .search-suggestions { background: var(--liquid-fallback-panel); border-color: var(--liquid-fallback-border); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.06); backdrop-filter: blur(var(--glass-blur)) saturate(1.06); }
 .search-suggestions button { width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 8px 11px; border: 0; border-radius: 9px; background: transparent; text-align: left; cursor: pointer; }
 .search-suggestions button:hover { background: var(--state-hover-bg); color: var(--state-hover-fg); }
 .search-suggestions button[aria-selected="true"] { background: var(--state-selected-bg); color: var(--state-selected-fg); }
@@ -684,7 +688,7 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
 :root:not([data-surface-mode="liquid"]) .floating-player-visual { display: none; }
 .floating-player-panel .aplayer-host { position: relative; z-index: 1; }
 .aplayer-collapse { position: absolute; z-index: 3; top: 8px; right: 8px; width: 34px; min-height: 34px; border-radius: 10px; }
-.floating-player-panel .aplayer { margin: 0; overflow: hidden; border: 1px solid var(--surface-border-strong); border-radius: var(--floating-player-radius); color: var(--text); background: color-mix(in srgb, var(--surface-active-strong-color) 94%, transparent); box-shadow: var(--surface-shadow); }
+.floating-player-panel .aplayer { margin: 0; overflow: hidden; border: 1px solid var(--surface-border-strong); border-radius: var(--floating-player-radius); color: var(--text); background: var(--surface-panel-strong); box-shadow: var(--surface-shadow); }
 :root[data-surface-mode="liquid"] .floating-player-panel .aplayer { border-color: transparent; background: transparent; box-shadow: none; }
 .floating-player-panel .aplayer .aplayer-info { border-bottom-color: var(--surface-border-strong); }
 .floating-player-panel .aplayer .aplayer-info .aplayer-music,
@@ -734,9 +738,9 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
   :root[data-surface-mode="liquid"] .dialog-content .ui-select,
   :root[data-surface-mode="liquid"] .dialog-content .ui-button--secondary { background: var(--liquid-surface-control); border-color: var(--liquid-border-strong); }
   :root[data-surface-mode="liquid"] .settings-search-box .ui-input { background: transparent; }
-  :root[data-surface-mode="liquid"] .search-suggestions,
   :root[data-surface-mode="liquid"] .quick-link-menu,
   :root[data-surface-mode="liquid"] .ui-select-list { background: var(--liquid-popup-surface); border-color: var(--liquid-border-strong); }
+  :root[data-surface-mode="liquid"] .search-suggestions,
   :root[data-surface-mode="liquid"] .quick-link-backdrop { background: var(--liquid-surface-panel, var(--surface-panel)); border-color: var(--liquid-border); }
   :root[data-surface-mode="liquid"] .quick-link:hover .quick-link-backdrop,
   :root[data-surface-mode="liquid"] .quick-link--add:hover .quick-link-backdrop { background: var(--liquid-surface-control-hover); border-color: var(--liquid-border-strong); }
@@ -858,6 +862,13 @@ video.background-media--stretch { object-fit: fill; object-position: center; }
     :root[data-surface-mode="liquid"] .dialog-layer--nested::after,
     :root[data-surface-mode="liquid"] .dialog-layer--nested .dialog-content > .dialog-header { background: var(--liquid-dialog-surface-nested); border-color: var(--liquid-border); }
   }
+}
+
+@supports not (color: color-mix(in srgb, white 50%, transparent)) {
+  :root[data-surface-mode="minimal"] { --surface-compat-color: var(--minimal-surface-strong-color); }
+  :root[data-surface-mode="material"] { --surface-compat-color: var(--material-surface-container); }
+  :root[data-surface-mode="minimal"] :is(.surface--minimal, .quick-link-backdrop, .glass-surface, .top-action, .settings-trigger, .search-suggestions, .ui-select-list, .quick-link-menu, .setting-group, .settings-nav, .floating-player-panel .aplayer),
+  :root[data-surface-mode="material"] :is(.surface--material, .quick-link-backdrop, .glass-surface, .top-action, .settings-trigger, .search-suggestions, .ui-select-list, .quick-link-menu, .setting-group, .settings-nav, .floating-player-panel .aplayer) { background: var(--surface-compat-color); }
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

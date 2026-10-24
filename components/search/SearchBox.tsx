@@ -152,7 +152,7 @@ export function SearchBox() {
             }}
           />
           {suggestionsOpen && (
-            <Surface large plain liquidRenderer={false} className="search-suggestions">
+            <Surface plain liquidRenderer={false} className="search-suggestions">
               <div id={listId} role="listbox" aria-label={t("suggestions")}>
               {translationUrl ? <button id={`${listId}-0`} type="button" role="option" aria-selected={activeIndex === 0} onMouseDown={(event) => event.preventDefault()} onClick={() => window.open(translationUrl, "_blank", "noopener,noreferrer")}>
                 <span className="suggestion-badge">译</span>{t("translation")} “{query.trim()}”
