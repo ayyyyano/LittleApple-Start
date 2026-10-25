@@ -74,7 +74,7 @@ export function LargeLiquidSurface({ children, className, as: Tag = "div", id, r
   }, [mode, paint, ref]);
 
   const blur = "blur(var(--glass-blur)) saturate(1.06)";
-  return <Tag ref={ref} id={id} role={role} aria-label={ariaLabel} aria-hidden={ariaHidden} className={`surface surface--liquid liquid-large-surface ${className ?? ""}`} data-liquid-surface-mode={mode} style={{ ...style, background: mode === "live-backdrop" ? "var(--liquid-large-tint)" : "var(--liquid-large-neutral)", backdropFilter: mode === "live-backdrop" ? blur : "none", WebkitBackdropFilter: mode === "live-backdrop" ? blur : "none" }}>
+  return <Tag ref={ref} id={id} role={role} aria-label={ariaLabel} aria-hidden={ariaHidden} className={`surface surface--liquid liquid-large-surface ${className ?? ""}`} data-liquid-surface-mode={mode} style={{ ...style, background: mode === "live-backdrop" ? "var(--liquid-large-tint)" : "var(--liquid-large-neutral)", backgroundClip: "padding-box", backdropFilter: mode === "live-backdrop" ? blur : "none", WebkitBackdropFilter: mode === "live-backdrop" ? blur : "none" }}>
     {mode === "wallpaper-blur" && paint ? <div className="liquid-wallpaper-clip" aria-hidden="true">
       <WallpaperLayers paint={paint} />
       <div className="liquid-wallpaper-tint" />

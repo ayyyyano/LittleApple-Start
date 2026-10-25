@@ -78,7 +78,7 @@ describe("global Liquid live effects", () => {
         gated.add(declaration[1].slice(4, -1));
       }
     }
-    const defaults = rules.find((r) => r.selector === ':root[data-surface-mode="liquid"]')!.body;
+    const defaults = rules.find((r) => r.selector === ':root[data-surface-mode="liquid"]' && r.body.includes("--liquid-backdrop-filter:"))!.body;
     const enabled = rules.find((r) => r.selector === ':root[data-surface-mode="liquid"][data-liquid-live-effects="on"]')!.body;
     expect(gated.size).toBe(8);
     for (const variable of gated) {
